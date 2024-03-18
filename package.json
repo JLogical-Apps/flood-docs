@@ -1,22 +1,14 @@
 {
-  "name": "nextra-docs-template",
+  "name": "flood-docs",
   "version": "0.0.1",
-  "description": "Nextra docs template",
+  "description": "Flood docs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/shuding/nextra-docs-template.git"
-  },
-  "author": "Shu Ding <g@shud.in>",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/shuding/nextra-docs-template/issues"
-  },
-  "homepage": "https://github.com/shuding/nextra-docs-template#readme",
+  "homepage": "https://github.com/JLogical-Apps/flood-docs",
   "dependencies": {
     "next": "^13.0.6",
     "nextra": "latest",
