@@ -1,0 +1,184 @@
+# Style
+
+The Style module aims to address common challenges in Flutter app development, such as maintaining a consistent visual style across the application, handling theme variations, and applying styles to individual widgets. By providing a centralized styling system, the Style module enables developers to focus on building the app's functionality while ensuring a polished and cohesive user interface.
+
+## StyleComponents
+
+The Style module allows you to define the appearance of `StyleComponent`s, which are widgets that utilize the current `Style` within the `BuildContext` to render themselves. This includes using the current [ColorPalette](#color-palette) for consistent color theming, determining `TextStyle` for text elements, styling dialogs and messages (`StyledDialog`s and `StyledMessage`s), and creating a [Styleguide](#styleguide) to preview different components.
+
+By defining styles centrally, you can ensure a consistent look and feel throughout your application. The Style module provides a structured approach to styling, making it easy to manage and modify the visual aspects of your app in one place.
+
+## Emphasis
+
+The Style module introduces the concept of emphasis, which allows you to control the visual prominence of components within your application. Emphasis is divided into three levels: `subtle`, `regular`, and `strong`. By applying the appropriate emphasis level to a component, you can guide the user's attention and create a clear visual hierarchy.
+
+## Pre-built StyleComponents
+
+The Style module includes a variety of `StyleComponent`s, each offering specialized functionalities.
+
+### StyledList
+
+Allows for the composition of attributes for columns and rows, making it easy to create well-structured and visually appealing lists.
+
+```dart
+StyledList
+    .column // Defines this as a column instead of a row.
+    .centered // Centers all widgets on the main axis.
+    .withScrollbar // Makes it scrollable and adds a scrollbar.
+    .withMinChildSize(250)( // Creates a grid where each item has a minimum width of 250.
+        children: [...] // The children of the StyledList.
+)
+```
+
+### StyledCard
+
+Provides emphasis options, allowing you to draw attention to important content or create visual hierarchy within your app. Easily define the title, body, leading widget, menu button actions, and children of the card.
+
+```dart
+StyledCard.strong( // Choose the emphasis of the card. The background color and border will respond.
+  titleText: 'John Doe', // Can also be `title` if you want to use a widget instead.
+  bodyText: 'User since 2022', // Can also be `body` if you want to use a widget instead.
+  leadingIcon: IconData.profile, // Can also be `leading` if you want to use a widget instead.
+  actions: [...], // Shown in a menu button on the right.
+  children: [...], // Displayed underneath the body.
+)
+```
+
+### StyledPage
+
+A scaffold that allows you to easily define actions and an action to perform when refreshing the page. It provides a consistent and customizable structure for your app's pages.
+
+```dart
+StyledPage.refreshable(
+  titleText: 'Logs', // Can also be `title` if you want to use a widget instead.
+  onRefresh: () => someModel.load(), // Called using pull-to-refresh.
+  actions: [...], // Shown in a menu button on the right.
+  children: [...], // The body of the page.
+);
+```
+
+### StyledContainer
+
+Offers extensive customization options, enabling you to create containers with different backgrounds, borders, and padding.
+
+```dart
+StyledContainer.subtle( // Choose the emphasis of the container. The background color and border will respond.
+  child: StyledButton.strong(labelText: 'Hello World', onPressed: (){...}),
+)
+```
+
+These components, along with many others provided by the Style module, offer a wide range of styling possibilities and help you create rich and engaging user interfaces with minimal effort.
+
+To learn more about how to use the pre-built StyleComponents in your UIs, refer to the presentation layer of the [Example Todo](https://github.com/JLogical-Apps/flood-example/tree/master/todo/lib/presentation) app.
+
+## Simplified Text Styling
+
+The `StyledText` feature streamlines text styling by offering a concise syntax for applying various text attributes such as bold, strong emphasis, alignment, and style. This reduces verbosity and enhances readability in code.
+
+Instead of
+
+```dart
+Text(
+  'Check this out!',
+  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+    color: context.colorPalette().foreground.strong,
+    fontStyle: FontStyle.italic,
+  ),
+  textAlign: TextAlign.center,
+);
+```
+
+you can write this:
+
+```dart
+StyledText.body.strong.centered.italics('Check this out!')
+```
+
+## Existing Styles
+
+Flood provides two built-in styles: `DeltaStyle` and `FlatStyle`. These styles offer a solid foundation for creating visually appealing and consistent user interfaces.
+
+### DeltaStyle
+
+`DeltaStyle` is a modern and sleek style inspired by this [Figma board](https://www.figma.com/community/file/1289153688740927558).
+
+```dart
+final style = DeltaStyle(
+  primaryColor: Color(0xff9333ea),
+  backgroundColor: Color(0xff181A20),
+);
+```
+
+### FlatStyle
+
+`FlatStyle` is a versatile and lightweight style that emphasizes simplicity and efficiency. You can see an example of it in action in [Valet](https://www.valetbudget.com/).
+
+```dart
+final style = FlatStyle(
+  primaryColor: Color(0xff9333ea),
+  backgroundColor: Color(0xff181A20),
+);
+```
+
+Both `DeltaStyle` and `FlatStyle` serve as excellent starting points for creating beautiful and functional user interfaces. You can choose the style that aligns with your design vision and customize it further to match your specific requirements.
+
+## Styleguide
+
+The Style module includes a powerful tool called the `Styleguide` that allows you to preview and test the appearance of different components in your application. The `Styleguide` provides a visual reference for designers and developers, ensuring consistency and adherence to the defined style.
+
+To access the `Styleguide`, you can navigate to `/_styleguide` in your app.
+
+## Automatic Padding
+
+To maintain visual consistency and prevent clutter, the Style system automatically handles widget padding. This ensures that elements within containers like `StyledList.column`, `StyledContainer`, and `StyledCard` are appropriately spaced without manual padding adjustments.
+
+## Color Palette
+
+The `ColorPalette` functionality enables dynamic color selection based on the background color and emphasis level. It simplifies the process of choosing contrasting colors for text and other elements against different backgrounds, ensuring readability and visual harmony.
+
+```dart
+final colorPalette = context.colorPalette();
+final textColor = colorPalette.foreground.regular; // Use foreground.strong for an emphasized text, or foreground.subtle for subtle text.
+final buttonBackgroundColor = colorPalette.background.regular; // Use background.strong or background.subtle to define emphasis.
+final buttonTextColor = buttonBackgroundColor.foreground.regular; // [buttonBackgroundColor] is both a `Color` and a `ColorPalette`, so you can see what the text's foreground color should be.
+```
+
+With the `ColorPalette`, you can use a set of colors that automatically adapt to the background color of a widget. This means that text and other elements will always be legible and visually appealing, regardless of the background they are placed on. The emphasis level allows you to further fine-tune the color selection based on the desired prominence of an element.
+
+## Customization
+
+The Style module provides flexibility in styling by allowing the addition of custom `StyleRenderer`s to a `Style`. This makes it possible to tailor the appearance of components like `StyledCard`s according to specific design requirements.
+
+```dart
+class MyCustomCardRenderer with IsTypedStyleRenderer<StyledCard> {
+  @override
+  Widget renderTyped(BuildContext context, StyledCard component) {
+    return Card(
+      color: component.backgroundColor ?? context.colorPalette().background.regular,
+      elevation: component.elevation ?? 4.0,
+      child: component.child,
+    );
+  }
+}
+
+final style = FlatStyle()
+    ..addRenderer(MyCustomCardRenderer());
+```
+
+If the default styling provided by the Style module doesn't meet your needs, you can easily create custom renderers to modify the appearance of specific components. This allows you to have full control over the visual aspects of your app while still benefiting from the consistency and convenience provided by the Style module.
+
+## Usage
+
+To utilize the Style module in your Flutter application, follow these steps:
+
+1. Create a `Style` instance, such as `FlatStyle()`, which serves as the base style for your application.
+
+```dart
+final style = FlatStyle();
+```
+
+2. Pass in the `Style` into the `FloodAppComponent`.
+
+```dart
+await appPondContext.register(FloodAppComponent(style: style));
+```

@@ -1,0 +1,89 @@
+# Path
+
+The Path module is designed to streamline navigation and data passing in Flutter Web projects or APIs. By enabling the definition of routes that associate specific URLs with corresponding widgets or tasks, the Path module ensures that users are directed to the right part of the application based on the URL accessed. This module is invaluable for developers looking to create well-structured navigation systems and enhance the dynamic nature of their applications.
+
+## Route
+
+A `Route` is an abstract class that you can extend to define your application's routes. It serves three primary purposes:
+
+1. Define fields: You can define both segment properties and query properties which will be set based on a path. Segment properties are based on an actual segment of the path, such as `[userId]` in `/user/[userId]`, whereas query properties are additional properties in addition to the segments themselves, such as `view` in `/user/[userId]?view=public`.
+
+2. Define a `PathDefinition`: The `PathDefinition` specifies what the path will look like and determines whether the `Route` matches a given path. It can include predefined strings or properties.
+
+3. Define how to instantiate the class: This is necessary because every time you navigate to a `Route`, you are returned a copy of the `Route` with all the fields filled in with the correct values.
+
+Here's an example of a `Route`:
+
+```dart
+class EnvelopeRoute with IsRoute<EnvelopeRoute>, IsPathDefinitionWrapper {
+  late final envelopeIdProperty = field<String>(name: 'id').required();
+  late final budgetIdProperty = field<String>(name: 'budgetId').required();
+  late final trayIdProperty = field<String>(name: 'trayId');
+
+  @override
+  PathDefinition get pathDefinition => PathDefinition.string('envelope').property(envelopeIdProperty);
+
+  @override
+  List<RouteProperty> get queryProperties => [budgetIdProperty, trayIdProperty];
+
+  @override
+  EnvelopeRoute copy() {
+    return EnvelopeRoute();
+  }
+}
+```
+
+## PathDefinition
+
+A `PathDefinition` defines what the path will look like and determines whether a given URL matches the path. It can include predefined strings or properties. For example:
+
+```dart
+final childPath = PathDefinition.string('parent').string('child');
+childPath.matches('/parent/child?property=1') // true
+childPath.matches('/some/other/path') // false
+childPath.matches('/parent/other') // false
+```
+
+You can use `.string()` to define a new string segment, `.property()` to define an arbitrary value that fills in a property, and `.wildcard()` to match any value within a segment.
+
+## Query Properties
+
+For optional properties you want to retrieve from a path, such as `?myProperty=hi`, add the property to the `queryProperties` getter, and the `Route` will find all query properties from the path and fill them in.
+
+```dart
+class TestRoute with IsRoute<TestRoute> {
+  late final myProperty = field<String>(name: 'myProperty');
+
+  @override
+  List<RouteProperty> get queryProperties => [myProperty];
+
+  ...
+}
+```
+
+## Hidden Properties
+
+If you want to instantiate a Route but provide it with more dynamic field values without inserting them into the path itself, you can add those properties to the `hiddenProperties` getter. The `Route` will fill them in accordingly.
+
+```dart
+class TestRoute with IsRoute<TestRoute> {
+  late final passwordProperty = field<String>(name: 'password');
+
+  @override
+  List<RouteProperty> get queryProperties => [passwordProperty];
+
+  ...
+}
+
+context.navigateTo(TestRoute()..passwordProperty.set('hunter2'));
+```
+
+## Fields
+
+You can create fields in a `Route` by using a late field with the `field` helper. Define the type of the field in the generic and pass along the name of the field. The name is used to determine where to pull values from the query parameters, otherwise it is just used for debugging.
+
+You can add modifiers to a field, such as `.required()`, to make it non-nullable. If a required field is null, it will throw an exception.
+
+## Usage
+
+`Route`s are used in both the Flutter `AppPondContext` to define the URLs that can be navigated to, and in the `AutomatePondContext` to define the CLI commands that can be used.

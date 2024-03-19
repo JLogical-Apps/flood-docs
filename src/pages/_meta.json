@@ -6,6 +6,8 @@
     "type": "separator"
   },
   "pond": "Pond",
+  "path": "Path",
+  "style": "Style",
   "-2": {
     "type": "separator"
   },
