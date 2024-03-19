@@ -14,9 +14,8 @@
     "type": "separator"
   },
   "access-flood": {
-    "title": "Access Flood ↗",
+    "title": "Access Flood",
     "type": "page",
-    "href": "https://www.flooddev.com/access",
-    "newWindow": true
+    "href": "/get-started#get-access-to-flood"
   }
 }
