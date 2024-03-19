@@ -10,6 +10,7 @@
   "license": "MIT",
   "homepage": "https://github.com/JLogical-Apps/flood-docs",
   "dependencies": {
+    "@next/third-parties": "^14.1.3",
     "@tabler/icons-react": "^3.1.0",
     "next": "^14",
     "nextra": "latest",
