@@ -1,0 +1,42 @@
+import { Callout } from 'nextra/components';
+
+# Project Structure
+
+Flood's modular architecture streamlines the development process by dividing the project into two main components: the Core project and the App project. This structure separates the core logic from the application-specific code, promoting code reusability and maintainability.
+
+## Core Project
+
+The Core project, identified by the `_core` suffix (e.g., `todo_core`), serves as the core of your Flood project. It is designed to house the universal logic and models that form the backbone of your application(s). Key characteristics of the Core project include:
+
+-   **No Dependency on Flutter**: The Core project is crafted to be independent of Flutter, ensuring that the core logic can be reused across different platforms without modification.
+-   **Centralization of Shared Code**: All the code that needs to be accessed across multiple applications within the project is placed here. This includes, but is not limited to, data models, utility functions, and shared business logic.
+-   **`tool` Directory**: This directory contains essential tools for project [automation](/automate), most notably the `automate.dart` file. This script facilitates the execution of various Flood automations, streamlining development tasks.
+
+## App Project
+
+Parallel to the Core project, the App project (e.g., `todo`) focuses on the application-specific elements that rely on the Flutter framework. This project leverages the Core project as a dependency, building upon the shared logic to create a complete Flutter application. Key aspects include:
+
+-   **Flutter-centric Development**: This project is where you'll integrate Flutter-specific elements such as UI components, routing, and state management, constructing the user-facing side of your application.
+-   **Dependency on Core Project**: The App project directly depends on the Core project, ensuring seamless access to the shared logic and models defined in the Core project.
+
+## Melos: Simplifying Setup with Bootstrapping
+
+[Melos](https://melos.invertase.dev/) plays a key role in setting up Flood projects efficiently, especially when it comes to managing dependencies. The bootstrapping feature of Melos does more than just setting up your project:
+
+-   **Bootstrapping Instead of `flutter pub get`**: Use the `melos bootstrap` command as a one-stop command to get your project ready. This command not only fetches all necessary dependencies but also links local packages in your project, making sure everything works together smoothly. Just run:
+
+    ```shell
+    melos bootstrap
+    ```
+
+    This is particularly helpful in Flood projects, where the Core and App parts need to connect seamlessly.
+
+-   **Running Tests**: To run tests using Melos, execute the following command in your project's root directory:
+
+    ```shell
+    melos test
+    ```
+
+    This command will run the tests for all the packages in your project, ensuring that your code is functioning as expected.
+
+By following this structured approach, Flood ensures that projects remain scalable, maintainable, and adaptable to various development needs. The clear separation between core logic and application-specific code facilitates code reuse and enhances the overall development experience within the Flutter ecosystem.

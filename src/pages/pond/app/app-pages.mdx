@@ -1,0 +1,44 @@
+# App Pages
+
+In Pond, each screen in your app is represented by an `AppPage`. These pages use the [Path module](/path) to determine which page should be displayed based on the current URL.
+
+# AppPage
+
+An `AppPage` is a [HookWidget](https://pub.dev/packages/flutter_hooks) that consists of several key components:
+
+-   `pathDefinition`: Specifies the route for the page using the Path module's [PathDefinition](/path).
+-   `build()`: Defines how the page should be rendered.
+-   `redirectTo()`: An optional function that is called before the page is displayed. If this function returns a non-null `RouteData`, the user will be redirected to that page instead of the current one.
+-   `getParent()`: Allows you to specify a parent page for the current page. When warping to the page, the parent page will be displayed first, providing a consistent "back" button behavior.
+
+## App Page Wrapper
+
+An `AppPageWrapper` is a way to wrap another `AppPage` and add extra functionality, such as composing redirects and parent pages. This is particularly useful when you want to apply common behaviors or UI elements to multiple pages.
+
+For example:
+
+```dart
+class SignupPage with IsAppPageWrapper<SignupRoute> {
+  @override
+  AppPage<SignupRoute> get appPage => AppPage<SignupRoute>()
+        .onlyIfNotLoggedIn() // Redirects the user to the home page if they are logged in.
+        .withParent((context, route) => LoginRoute()); // When warping here, show the "LoginRoute" as the parent.
+
+  @override
+  Widget onBuild(BuildContext context, SignupRoute route) {
+    ...
+  }
+}
+```
+
+## Redirects
+
+Redirects in Pond allow you to asynchronously decide whether to redirect the user to a different `Route` when they try to access the current page. This is handy for cases where you want to prevent access to certain pages based on authentication state or user permissions.
+
+For example, if a user tries to access a profile page but is not logged in, you can use a redirect to send them to the login page instead.
+
+## Parent Pages
+
+Adding a parent to an `AppPage` ensures that when a user navigates directly to that page, the parent page is displayed first. This provides a consistent "back" button behavior across your app.
+
+For instance, if you have a `ProjectDetailsPage` that should always be accessed from the `ProjectListPage`, you can set the `ProjectListPage` as the parent of the `ProjectDetailsPage`. This way, even if a user navigates directly to the `ProjectDetailsPage` URL, they will see the `ProjectListPage` when they click the "back" button.

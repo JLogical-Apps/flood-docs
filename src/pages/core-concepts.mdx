@@ -1,0 +1,27 @@
+# Core Concepts
+
+This section introduces the fundamental concepts of Flood's architecture and how they contribute to Flutter application development.
+
+import { Cards } from 'nextra/components';
+import { DescriptionCard } from '../components/description-card';
+
+<Cards>
+    <DescriptionCard
+        title="Project Structure"
+        description="Learn about the separation of concerns in Flood projects, with `_core` projects containing shared logic and Flutter projects containing platform-specific code."
+        href="/core-concepts/project-structure"
+        arrow
+    />{' '}
+    <DescriptionCard
+        title="Composition"
+        description="Discover Flood's compositional approach to application development, which favors composition over inheritance and functional programming."
+        href="/core-concepts/composition"
+        arrow
+    />{' '}
+    <DescriptionCard
+        title="ValueStreams"
+        description="Learn about ValueStreams, an extension of Dart's Stream class that provides synchronous access to the current value emitted by the stream."
+        href="/core-concepts/value-streams"
+        arrow
+    />
+</Cards>

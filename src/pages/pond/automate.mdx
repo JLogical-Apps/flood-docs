@@ -1,0 +1,47 @@
+# AutomatePondContext
+
+The `AutomatePondContext` is a key component of the Pond module in the Flood framework, designed to facilitate the creation and management of command-line interface (CLI) utilities for your Flutter projects. It extends the functionality of the `CorePondContext` by providing a way to organize and execute `AutomatePondComponent`s, which are components specifically tailored for automation tasks.
+
+## AutomatePondComponent
+
+An `AutomatePondComponent` is similar to a `CorePondComponent`, but it offers additional features focused on automation and efficiency. Like `CorePondComponent`s, `AutomatePondComponent`s have lifecycle methods for registration and loading. However, they also provide the ability to define `AutomateCommand`s, which are the building blocks of your CLI utilities.
+
+## AutomateCommand
+
+An `AutomateCommand` represents a specific task or operation that can be executed from the command line. Each command is composed of several key elements:
+
+-   `name`: The name of the command, which is used to invoke it from the command line.
+-   `description`: A brief explanation of what the command does, displayed in the help output.
+-   `pathDefinition`: An `AutomatePathDefinition` that specifies how additional segments at the end of the command name should be handled. For example, `dart tool/automate.dart deploy staging` would run the `DeployAutomateCommand` and pass `staging` to the `environmentProperty` based on its `pathDefinition`.
+-   `parameters`: A list of properties that can be set using optional parameters. For instance, `dart tool/automate.dart deploy staging dryrun:true` would set the `dryrun` property to `true` if it is defined as one of the command's `parameters`.
+-   `copy()`: A method that creates a new instance of the command.
+-   `onRun()`: The method that is executed when the command is invoked.
+
+## Usage
+
+To start using the `AutomatePondContext` and its associated `AutomatePondComponent`s, follow these steps:
+
+1. Create an `AutomatePondContext` and register your `AutomatePondComponent`s.
+2. Define your `AutomateCommand`s within your `AutomatePondComponent`s, specifying their `name`, `description`, `pathDefinition`, `parameters`, `copy()` method, and `onRun()` method.
+3. Create an `automate.dart` file in the `tool` directory of your Flutter project with the following content:
+
+```dart filename="automate.dart"
+Future<void> main(List<String> args) async {
+  final corePondContext = await getCorePondContext();
+  final automatePondContext = AutomatePondContext(corePondContext: corePondContext);
+
+  // Register your AutomatePondComponents here
+  await automatePondContext.register(MyAutomateComponent());
+  await automatePondContext.register(AnotherAutomateComponent());
+
+  await Automate.automate(
+    context: automatePondContext,
+    args: args,
+    appDirectoryGetter: (coreDirectory) => coreDirectory.parent / 'app',
+  );
+}
+```
+
+With these steps completed, you can now run `dart tool/automate.dart` from your project's root directory to see a list of available commands. To execute a specific command, simply run `dart tool/automate.dart <command_name>` with any necessary arguments or parameters.
+
+For more information about these components and how to create your own custom automation tasks, refer to the Automate module documentation. You can also find descriptions of the smaller utility packages in the [Others](/others) section.

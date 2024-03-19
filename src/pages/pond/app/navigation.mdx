@@ -1,0 +1,39 @@
+# Navigation & Routing
+
+Navigation and routing are crucial aspects of any Flutter application, and the Pond module in the Flood framework provides a powerful and intuitive way to handle these tasks. The `AppPondContext` and its associated components work together to ensure seamless navigation and proper routing throughout your app.
+
+## Initialization
+
+When your Flutter app is launched, Pond examines the initial URL and automatically navigates to the corresponding page. This process happens after the splash screen has finished loading, ensuring a smooth user experience.
+
+For example, let's say your app is hosted at `app.flooddev.com`. If a user opens the URL `app.flooddev.com/profile` directly, Pond will look for the [Route](/path) associated with the `profile` path and display the appropriate page.
+
+This automatic navigation is made possible by the `pages` property of `AppPondComponent`s, which defines a map of `Route`s to their respective [AppPage](/pond/app/app-pages)s.
+
+## Navigate vs. Warp
+
+Pond offers two primary methods for navigating between pages: navigateTo and warpTo. Understanding the difference between these methods is key to creating the desired user experience.
+
+### Navigate
+
+The `navigateTo` method is used to push a new route onto the navigation stack. When you navigate to a new page using this method, the new page will have a "back" button that allows the user to return to the previous page.
+
+This is the most common way to navigate between pages in your app, as it preserves the navigation history and provides a familiar user experience.
+
+For example:
+
+```dart
+context.navigateTo(ProfileRoute());
+```
+
+### Warp
+
+The `warpTo` method, on the other hand, replaces the entire navigation stack with the new page. This means that all previous pages are removed from the stack, and the new page becomes the only page in the navigation history.
+
+This method is particularly useful for scenarios where you want to clear the navigation history and start fresh. A common example is when a user logs out of your app. In this case, you would typically want to navigate to the login page and remove all previous pages from the stack.
+
+For example:
+
+```dart
+context.warpTo(LoginRoute());
+```

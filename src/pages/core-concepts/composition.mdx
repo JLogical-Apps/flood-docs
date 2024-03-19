@@ -1,0 +1,29 @@
+# Composition over Inheritance/Functional Approaches
+
+In the development of the Flood framework, we have explored various programming paradigms and architectural patterns to find the most suitable approach for building scalable and maintainable Flutter applications. After extensive experimentation, we have chosen to embrace composition as the primary design principle, favoring it over traditional inheritance-based or purely functional approaches.
+
+## The Power of Composition
+
+Composition is a powerful concept in software development that focuses on combining simple, independent components to create more complex and specialized behaviors. Instead of relying on deep inheritance hierarchies or extensive functional abstractions, composition allows us to break down the application into smaller, more manageable pieces that can be easily understood, tested, and maintained.
+
+In the context of Flood, composition is applied at various levels, from the architecture of the framework itself to the design of individual components and features.
+
+## Composing ValueObjects
+
+One of the key areas where composition shines in Flood is in the design of [ValueObjects](/drop). Instead of defining complex objects with deep inheritance hierarchies for each property, Flood takes a compositional approach.
+
+The foundation of a ValueObject in Flood is a simple "Property" class. This class represents a basic building block that can be composed with additional functionality to create more specialized properties. By combining a "Property" with other components, such as display name, validation rules, multiline support, fallback values, and more, we can create rich and expressive ValueObjects that precisely match our application's requirements.
+
+This compositional approach offers several benefits:
+
+-   **Flexibility**: By composing properties from smaller, independent components, we gain the flexibility to customize and extend them as needed, without being constrained by a predefined inheritance hierarchy.
+-   **Reusability**: Composition promotes reusability by allowing us to create small, focused components that can be easily combined and reused across different parts of the application.
+-   **Maintainability**: Breaking down complex objects into smaller, composable parts makes the codebase more maintainable. Each component has a clear and specific purpose, making it easier to understand, test, and modify.
+
+## Composition in Action
+
+The compositional approach in Flood extends beyond ValueObjects. It is applied throughout the framework, including:
+
+-   **Pond Ecosystem**: The [Pond Ecosystem](/pond) is built on the principle of composition, where components are registered and combined to create the desired functionality. Components can be easily added, removed, or replaced without affecting the overall structure of the application.
+-   **Styling**: Flood's [styling system](/style) is highly compositional, allowing developers to define reusable style components that can be combined and customized to create consistent and visually appealing user interfaces.
+-   **Routing**: The [routing mechanism](/path) in Flood leverages composition to define routes, handlers, and middleware as independent components that can be composed together to create powerful and flexible navigation flows.
