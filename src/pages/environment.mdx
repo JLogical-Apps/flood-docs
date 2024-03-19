@@ -1,0 +1,24 @@
+# Environment
+
+The Environment module in the Flood framework provides a powerful and flexible way to manage and customize your application's environment settings. It allows you to easily switch between different environments and define overrides using a simple file structure.
+
+## Overview
+
+Flood provides a variety of environments you can use to test your app in. Services defined as `adapting` will adapt their implementation based on the current environment. For example, instead of draining Firebase resources when testing your app, simply use the `testing` environment to simulate all repositories and authentication locally.
+
+-   `testing` simulates all services in-memory. Restarting the app will reset everything. You can use the [TestingAppComponent](/other/testing) to define test data that will be populated every time you start the app in the `testing` environment.
+-   `device` simulates all services on the device file-system. This saves authentication and repositories into the device file system, so every time you restart the app, it will persist its memory.
+-   `qa` will prefer to use predefined emulators. For example, it will use the Local Firebase Emulator Suite for Firebase projects and your local Appwrite docker container for Appwrite projects.
+-   `staging` and `production` both use online resources, such as Firebase or Appwrite.
+
+## EnvironmentConfig
+
+The `EnvironmentConfig` class plays a crucial role in defining how environment data is retrieved from the currently running app. It provides a set of convenient methods to access various aspects of the environment configuration. With `getOrDefault<T>()`, you can easily pull custom values from the environment, such as environment variables or values from a configuration file. The `getBuildType()` method allows you to determine the current build type, while `getFileSystem()` provides access to the appropriate `FileSystem` instance for the current environment. When using Flood in a Flutter app, you'll typically use `EnvironmentConfig.static.flutterAssets()` to pull environment information from the `assets` folder and retrieve build information from the `Platform` class. On the other hand, when working with file-based environments, you'll use `EnvironmentConfig.static.fileAssets()` to pull environment information from a directory of files.
+
+## FileSystem
+
+Flood recognizes that different environments have distinct ways of interacting with a file system. For example, in a Flutter app, you interact directly with the device's file system, while in Automate, you work with the host machine's file system. To accommodate these differences, Flood provides appropriate abstractions. In the case of Flutter Web, where direct file system access is not available, Flood offers an emulated file system using local storage. The `EnvironmentConfig` class provides the `getFileSystem()` method, which allows you to retrieve the `FileSystem` instance suitable for the current environment. This method grants access to the `storageDirectory` for permanent file storage and the `tempDirectory` for temporary files, enabling you to work with files in a consistent manner across different environments.
+
+## Usage
+
+To utilize the Environment module effectively, you need to pass an `EnvironmentConfig` instance to the `CorePondContext`. This ensures that the core components of your application have access to the environment-specific configuration. Many services in the `Drop` module are designed to adapt to the current environment automatically. This means that you can easily switch between different environments by modifying the configuration. For example, to change the environment of your development device, you can create an `assets/config.overrides.yaml` file and specify the desired environment using the `environment: [environment]` syntax. This allows you to quickly test your app in different environments without making extensive code changes.

@@ -8,6 +8,8 @@
   "pond": "Pond",
   "path": "Path",
   "style": "Style",
+  "port": "Port",
+  "environment": "Environment",
   "-2": {
     "type": "separator"
   },
