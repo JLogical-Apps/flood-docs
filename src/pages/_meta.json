@@ -24,6 +24,7 @@
   "logs": "Logs",
   "url-bar": "Url Bar",
   "testing": "Testing",
+  "environment-banner": "Environment Banner",
   "-resources": {
     "type": "separator"
   },
