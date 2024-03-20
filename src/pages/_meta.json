@@ -27,6 +27,7 @@
   "environment-banner": "Environment Banner",
   "focus-grabber": "Focus Grabber",
   "type": "Type",
+  "action": "Action",
   "-resources": {
     "type": "separator"
   },

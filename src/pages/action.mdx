@@ -1,0 +1,64 @@
+# Action
+
+In any application, there are certain operations that are critical to its functionality, such as user authentication, data fetching, or file I/O. These operations often involve multiple steps, error handling, and side effects, which can make the code harder to understand and maintain.
+
+The Action module addresses these challenges by providing a unified way to define, execute, and monitor these complex operations. By wrapping them in `Action` objects, you can:
+
+-   Centralize the logic for each operation in a single place
+-   Customize how actions are executed, such as logging their execution times or delegating their work to a backend service
+-   Track the progress and status of each action, and handle errors in a consistent way
+-   Easily reuse and compose actions across your application
+
+## Defining Actions
+
+To define an action, you create an instance of the `Action` class, specifying its input and output types, as well as a `runner` function that performs the actual work:
+
+```dart
+final echoAction = Action<String, String>(
+  name: 'echo',
+  runner: (input) => input,
+);
+```
+
+In this example, `echoAction` takes an `input` string, and returns it back.
+
+## Running Actions
+
+To run an action, you simply call its `run` method with the appropriate input:
+
+```dart
+final response = await echoAction.run('1234');
+print('Fetched response: $response');
+```
+
+This will execute the action and return its output (in this case, `1234`), or throw an exception if an error occurs.
+
+## Modifying Actions
+
+Another powerful feature of actions is the ability to compose functionality together to build more complex operations.
+
+```dart
+final echoAction = Action<String, String>(
+  name: 'echo',
+  runner: (input) => input,
+)
+    .log() // Logs executions of the action using the Log module
+    .analytics() // Not implemented yet, but could integrate with an analytics module in the future
+    .onlyForPermissions(); // Not implemented yet, but could limit it to users with certain permissions
+```
+
+While the full potential of actions hasn't been fully tapped yet, there are a variety of avenues to explore with providing more functionality to Actions.
+
+## Usage
+
+The Action module is already integrated with the Flood framework through the `FloodCoreComponent`, so you can start using it right away in your Flood applications.
+
+To customize how actions are executed, you can pass an `actionWrapper` function to `FloodCoreComponent`:
+
+```dart filename="pond.dart"
+FloodCoreComponent(
+  actionWrapper: <P, R>(action) => action.log(context: corePondContext),
+);
+```
+
+This will wrap every action executed by Flood with [logging](/logs) behavior, so you can see their executions in the console.
