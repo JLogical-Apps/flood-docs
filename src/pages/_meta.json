@@ -25,6 +25,7 @@
   "url-bar": "Url Bar",
   "testing": "Testing",
   "environment-banner": "Environment Banner",
+  "focus-grabber": "Focus Grabber",
   "-resources": {
     "type": "separator"
   },
