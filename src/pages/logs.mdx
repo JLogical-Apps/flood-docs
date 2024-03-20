@@ -1,0 +1,45 @@
+# Logs
+
+Effective logging is crucial for monitoring and troubleshooting applications. The Log module addresses this need by offering a straightforward way to log info, warnings, and errors using a simple API. For example:
+
+```dart
+context.log('User logged in');
+context.logWarning('User attempted to access a restricted page');
+context.logError('Failed to fetch data from API', StackTrace.current);
+```
+
+This module can be easily extended to integrate with popular logging services like Firebase Crashlytics, DataDog, or Sentry, enabling you to centralize your logging and gain valuable insights into your application's behavior.
+
+## Logging
+
+Logging with the Log module is as simple as calling the appropriate method on the `BuildContext`. The available methods are:
+
+-   `context.log()`: Log an informational message.
+-   `context.logWarning()`: Log a warning message.
+-   `context.logError()`: Log an error message along with a `StackTrace`.
+
+These methods provide a consistent and intuitive way to log messages throughout your application.
+
+## Log History
+
+The Log module also supports storing log session history using the `LoggerService`. By adding `.withFileLogHistory()` to a `LoggerService`, you can automatically store log session history in a directory. This feature is particularly useful in cloud [environments](/environment) where you want to persist logs of previous sessions for later analysis, especially in case of crashes or unexpected behavior.
+
+```dart
+final loggerService = LoggerService.static.console.withFileLogHistory();
+```
+
+With log history, you can easily review the sequence of events leading up to an issue using the [Debug Module](/debug), facilitating better debugging and troubleshooting.
+
+## Usage
+
+To start using the Log module, you need to register a `LoggerService` in the `FloodCoreComponent`. Here's an example:
+
+```dart
+final floodCoreComponent = FloodCoreComponent(
+    loggerService: (corePondContext) => corePondContext.environment.isOnline
+        ? LoggerService.static.console.withFileLogHistory(corePondContext.fileSystem.tempDirectory / 'logs')
+        : LoggerService.static.console,
+);
+```
+
+Once registered, you can access the logging methods using `context.log`, `context.logWarning`, and `context.logError` throughout your application.

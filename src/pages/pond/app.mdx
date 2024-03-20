@@ -6,7 +6,7 @@ The `AppPondContext` is a key component of the Pond module in the Flood framewor
 
 An `AppPondComponent` is similar to a `CorePondComponent`, but it offers additional features tailored for Flutter apps. Like `CorePondComponent`s, `AppPondComponent`s have lifecycle methods for registration, loading, and resetting. However, they also provide extra functionality:
 
--   `wrapPage`: Allows you to define widgets that wrap around each page in your app. For example, the [EnvironmentBannerAppComponent](/other/environment-banner) uses this to display a banner indicating the current environment on every page.
+-   `wrapPage`: Allows you to define widgets that wrap around each page in your app. For example, the [EnvironmentBannerAppComponent](/environment-banner) uses this to display a banner indicating the current environment on every page.
 -   `wrapApp`: Lets you specify widgets that wrap around the entire `MaterialApp`. The [StyleAppComponent](/style) uses this to provide a `Style` to the whole app using a `Provider`.
 -   `pages`: A map of `Route`s to their corresponding `AppPage`s, which define the screens in your app and how they are displayed.
 
@@ -35,4 +35,4 @@ PondApp.run(
 
 This will load the `AppPondContext`, register all routes, and navigate to the initial page based on the current URL.
 
-For more information about the available `AppPondComponent`s, see the documentation for each module. You can find descriptions of the smaller utility packages in the [Others](/other) section.
+For more information about the available `AppPondComponent`s, see the documentation for each module.

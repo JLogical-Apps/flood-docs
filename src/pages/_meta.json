@@ -2,7 +2,8 @@
   "index": "Introduction",
   "get-started": "Get Started",
   "core-concepts": "Core Concepts",
-  "-1": {
+  "-modules": {
+    "title": "Modules",
     "type": "separator"
   },
   "pond": "Pond",
@@ -16,7 +17,12 @@
   "debug": "Debug",
   "persistence": "Persistence",
   "model": "Model",
-  "-2": {
+  "-other": {
+    "type": "separator",
+    "title": "Other"
+  },
+  "logs": "Logs",
+  "-resources": {
     "type": "separator"
   },
   "access-flood": {
