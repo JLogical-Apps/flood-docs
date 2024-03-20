@@ -10,6 +10,7 @@
   "style": "Style",
   "port": "Port",
   "environment": "Environment",
+  "drop": "Drop",
   "-2": {
     "type": "separator"
   },
