@@ -1,0 +1,31 @@
+# Native Setup
+
+Creating app icons and splash screens can be a tedious and repetitive task, especially when dealing with multiple platforms and resolutions. The Native Setup automation aims to streamline this process by providing a convenient way to define your app's branding assets in Dart and automatically generate the required files and configurations.
+
+## Usage
+
+To use the Native Setup automation in your Flood project, follow these steps:
+
+1. Add the `NativeSetupAutomateComponent` to your `AutomatePondContext`:
+
+```dart
+await automatePondContext.register(NativeSetupAutomateComponent(
+  appIconForegroundFileGetter: (root) => root / 'assets' - 'logo_foreground_transparent.png', // The path to your logo is `project/asset/logo_foreground_transparent.png`
+  backgroundColor: 0x172434, // The background color of the splash screen and app icon
+  padding: 80, // Padding around the image in the app icon
+));
+```
+
+In this example, we register the `NativeSetupAutomateComponent` with the `AutomatePondContext`. We provide a function `appIconForegroundFileGetter` that returns the path to the logo file to be used as the app icon foreground. Additionally, we specify the `backgroundColor` and `padding` for the app icon and splash screen.
+
+2. Run the Native Setup automation:
+
+```bash
+dart tool/automate.dart native_setup
+```
+
+This command will trigger the Native Setup automation, which will generate the necessary app icons and splash screens based on your configuration.
+
+Behind the scenes, the Native Setup automation will handle the creation and configuration of the `flutter_native_splash` and `flutter_launcher_icons` packages for you. It will generate the appropriate `yaml` files and place them in the correct locations within your project.
+
+By utilizing the Native Setup automation, you can easily generate professional-looking app icons and splash screens for your Flutter application. It provides a convenient and efficient way to handle your app's branding assets, allowing you to focus on other aspects of your project.

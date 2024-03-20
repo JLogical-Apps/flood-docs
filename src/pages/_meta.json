@@ -11,6 +11,7 @@
   "port": "Port",
   "environment": "Environment",
   "drop": "Drop",
+  "automate": "Automate",
   "-2": {
     "type": "separator"
   },

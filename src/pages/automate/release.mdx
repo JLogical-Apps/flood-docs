@@ -1,0 +1,75 @@
+# Release
+
+Releasing an application involves multiple steps, such as versioning, generating release notes, running tests, building the app, and deploying to different platforms. Managing this process manually can be time-consuming and error-prone. The Release automation aims to simplify and automate these steps, allowing you to focus on developing your app while ensuring a smooth and efficient release workflow.
+
+## Customization
+
+The Release automation offers a high level of customization to adapt to your project's specific needs. You can define your own release pipelines, target different platforms, and customize the deployment process.
+
+1. Targeting Other Platforms:
+
+-   By extending the `ReleasePlatform` enumeration, you can include additional platforms beyond the default ones (Android, iOS, and web).
+
+2. Custom Deploy Targets:
+
+-   You can create custom instances of the `DeployTarget` class to define additional deploy targets for your releases. This allows you to integrate with other app stores or testing frameworks.
+
+3. Custom Pipelines:
+
+-   Tailor the release pipelines to your specific requirements by adding or modifying the pipeline steps. You can create custom steps or rearrange the existing ones to match your desired release workflow.
+
+## Workflow
+
+The Release automation follows a structured workflow to ensure a consistent and reliable release process. Here's an overview of the default pipeline steps:
+
+1. **Version**: Overrides the versions in `pubspec.yaml` and Xcode configuration files to ensure consistent versioning across platforms.
+
+2. **Release Notes**: Incorporates release notes into the changelogs for Testflight and Google Play, providing a summary of the changes and improvements in the release.
+
+3. **Test**: Executes `dart test` to run the test suite and ensure the stability and quality of the codebase before proceeding with the release.
+
+4. **Build**: Compiles the Flutter app for the chosen release platforms, generating the necessary build artifacts.
+
+5. **Deploy**: Dispatches the build artifacts to the designated deploy targets, such as Google Play, Testflight, or Firebase, based on the configured pipelines.
+
+## Usage
+
+To use the Release automation in your Flood project, follow these steps:
+
+1. Configure the release pipelines in your `AutomatePondContext`:
+
+```dart
+await automatePondContext.register(ReleaseAutomateComponent(pipelines: {
+  ReleaseEnvironmentType.beta: Pipeline.defaultDeploy({
+    ReleasePlatform.android: DeployTarget.googlePlay(GooglePlayTrack.internal, isDraft: true),
+    ReleasePlatform.ios: DeployTarget.testflight,
+    ReleasePlatform.web: DeployTarget.firebase(channel: 'beta'),
+  }),
+  ReleaseEnvironmentType.production: Pipeline.defaultDeploy({
+    ReleasePlatform.android: DeployTarget.googlePlay(GooglePlayTrack.beta),
+    ReleasePlatform.ios: DeployTarget.testflight,
+    ReleasePlatform.web: DeployTarget.firebase(),
+  }),
+}));
+```
+
+In this example, we define two release pipelines: `beta` and `production`. The `beta` pipeline deploys Android builds to Google Play as a draft release, iOS builds to Testflight, and web builds to Firebase under the `beta` channel. The `production` pipeline deploys Android builds to Google Play in the beta track, iOS builds to Testflight, and web builds to Firebase under the main channel.
+
+2. Run the release automation:
+
+```bash
+# Beta release
+dart tool/automate.dart release beta
+
+# Alpha release with skipped steps
+dart tool/automate.dart release alpha skip_deploy:true skip_test:true
+
+# Production release for specific platforms
+dart tool/automate.dart release production only:android,ios
+```
+
+These commands trigger the release automation for different environments and platforms. You can specify the environment as the first argument, skip specific steps using `skip_[step_name]:true`, and target specific platforms using `only:platform1,platform2`.
+
+The first time you run a pipeline, the Release automation will guide you through an interactive setup to gather the necessary secrets and credentials. This ensures that your deployments are secure and accessible only to authorized personnel.
+
+By leveraging the Release automation, you can streamline your app's release process, ensuring consistency and reliability across different environments and platforms. It simplifies the complex tasks involved in versioning, testing, building, and deploying your app, allowing you to focus on delivering high-quality software to your users.

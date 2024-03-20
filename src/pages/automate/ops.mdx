@@ -1,0 +1,38 @@
+# Ops
+
+Managing backend resources for your Flutter app can be a complex and time-consuming task, especially when dealing with multiple environments and deployment targets. The Ops automation aims to simplify this process by providing a structured and automated way to deploy your backend resources, reducing the risk of manual errors and ensuring consistency across different environments.
+
+## OpsEnvironment
+
+The `OpsEnvironment` class defines the resources to deploy and the target environment to deploy to. It represents a specific configuration for deploying backend resources. Here are a few examples of `OpsEnvironment`:
+
+1. `OpsEnvironment.firebase`: Deploys Firestore Security Rules to a Firebase project. It ensures that the appropriate security rules are applied to your production Firestore database.
+
+2. `OpsEnvironment.firebaseEmulator`: Deploys Firestore Security Rules to the Local Firebase Emulator Suite. It allows you to test and validate your security rules locally before deploying to production. If the emulator suite is not currently running, it will automatically install and run it for you.
+
+The Ops automation provides a flexible and extensible way to define and configure different deployment environments. You can create additional `OpsEnvironment` implementations to support other backend resources or deployment targets based on your project's requirements.
+
+## Usage
+
+To use the Ops automation in your Flood project, follow these steps:
+
+1. Add the `OpsAutomateComponent` to your `AutomatePondContext` and define the mapping between [environment types](/environment) and `OpsEnvironment`:
+
+```dart
+await automatePondContext.register(OpsAutomateComponent(environments: {
+  EnvironmentType.static.qa: OpsEnvironment.firebaseEmulator,
+  EnvironmentType.static.production: OpsEnvironment.firebase,
+}));
+```
+
+In this example, we register the `OpsAutomateComponent` with the `AutomatePondContext` and define the mapping between environment types and their corresponding `OpsEnvironment`. The `production` environment is mapped to `OpsEnvironment.firebase`, indicating that backend resources will be deployed to the Firebase project. The `qa` environment is mapped to `OpsEnvironment.firebaseEmulator`, indicating that resources will be deployed to the Local Firebase Emulator Suite.
+
+2. Run the Ops automation to deploy your backend resources:
+
+```bash
+dart tool/automate.dart deploy production
+```
+
+This command triggers the Ops automation to deploy your backend resources to the specified environment, in this case, `production`. The automation will use the corresponding `OpsEnvironment` configuration to determine the deployment target and execute the necessary deployment steps.
+
+Behind the scenes, the Ops automation takes care of generating the appropriate configuration files, such as Firestore Security Rules, based on your Flood project's setup. It then deploys these files to the specified environment, ensuring that your backend resources are properly configured and secured.
