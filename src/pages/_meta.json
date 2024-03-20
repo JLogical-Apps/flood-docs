@@ -28,6 +28,13 @@
   "focus-grabber": "Focus Grabber",
   "type": "Type",
   "action": "Action",
+  "-integrations": {
+    "type": "separator",
+    "title": "Integrations"
+  },
+  "firebase": "Firebase",
+  "appwrite": "Appwrite (Coming Soon)",
+  "supabase": "Supabase (Coming Soon)",
   "-resources": {
     "type": "separator"
   },
