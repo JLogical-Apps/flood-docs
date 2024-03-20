@@ -22,6 +22,7 @@
     "title": "Other"
   },
   "logs": "Logs",
+  "url-bar": "Url Bar",
   "-resources": {
     "type": "separator"
   },
