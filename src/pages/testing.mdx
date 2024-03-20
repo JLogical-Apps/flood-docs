@@ -1,0 +1,20 @@
+# Testing
+
+When developing Flutter applications, it is common to restart the app frequently during the development and testing process. However, restarting the app in the `testing` [environment](/environment) can be challenging as it clears all the data from memory. This can lead to inconsistencies and the need to manually populate test data each time the app is restarted.
+
+To address this issue, the Flood framework introduces the `TestingSetupAppComponent`, which allows developers to populate the testing environment with consistent test data during the app loading process. By providing a reliable and predictable testing environment, developers can focus on writing and executing tests efficiently.
+
+## Usage
+
+To utilize the `TestingSetupAppComponent`, follow these steps:
+
+1. Add the `TestingSetupAppComponent` to your [AppPondContext](/pond/app).
+2. Initialize the testing environment in the `onSetup` method of the component.
+
+```dart
+await appPondContext.register(TestingSetupAppComponent(onSetup: () async {
+    // Potentially create a user account using Auth, and create data models using Drop.
+}));
+```
+
+By setting up the testing environment in this manner, developers can ensure that every time the app is restarted in the `testing` environment, it will have a consistent set of test data available for testing purposes.

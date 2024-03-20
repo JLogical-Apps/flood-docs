@@ -23,6 +23,7 @@
   },
   "logs": "Logs",
   "url-bar": "Url Bar",
+  "testing": "Testing",
   "-resources": {
     "type": "separator"
   },
