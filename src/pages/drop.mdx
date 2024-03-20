@@ -129,7 +129,7 @@ Here's an example of passing repository implementations to `FloodCoreComponent`:
 
 ```dart
 await corePondContext.register(FloodCoreComponent(
-  repositoryImplementations: [
+  repositoryImplementations: (corePondConext) => [
     FirebaseCloudRepositoryImplementation(),
   ],
 ));

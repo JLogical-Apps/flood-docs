@@ -1,0 +1,93 @@
+# Auth
+
+The Auth components are designed to simplify the integration of authentication services from popular cloud providers like Firebase and Appwrite. By leveraging Auth, you can avoid the need to memorize specific implementations for each provider, making your code more concise and maintainable.
+
+```dart
+// Example: Signup, logout, and login.
+final authService = AuthService.static.cloud();
+
+var account = await authService.signup(AuthCredentials.email(email: email, password: password));
+await authService.logout();
+account = await authService.login(AuthCredentials.email(email: email, password: password));
+```
+
+In addition to cloud services, Auth also enables you to emulate authentication when you're in the `testing` or `device` [environment](/environment). This feature allows you to test your application's authentication flow without relying on live services.
+
+## AuthService
+
+The `AuthService` class is the core of the Auth components. It provides methods for `login`, `signup`, `logout`, and `delete`, allowing you to handle user authentication seamlessly.
+
+Additionally, Auth introduces the `loginWithOtp` method, which enables login with a one-time password (OTP). Currently, only SMS OTP is supported, but more options will be added in the future.
+
+```dart
+// Example: Login with OTP
+final account = await AuthService.static.cloud().loginWithOtp(OtpProvider.phone(
+  phoneNumber: '18001234567',
+  smsCodeGetter: () => getUserInputForSmsCode(), // Getter for the user submitting the SMS code they received. Once validated, an `Account` will be returned.
+));
+```
+
+Auth provides several `AuthService` implementations to cater to different scenarios:
+
+-   `memory()`: An in-memory implementation suitable for testing and development.
+-   `file()`: A file-based implementation that stores authentication data locally.
+-   `cloud()`: An implementation that integrates with cloud providers like Firebase and Appwrite.
+-   `adapting()`: An implementation that adapts to the current environment.
+
+In the `memory()` and `adapting()` implementations, you can set whether logged-in users in the `testing` environment are admins by passing the `memoryIsAdmin: true` parameter. This helps you test the functionality of your app based on the user's admin status.
+
+## Account
+
+The `Account` class represents a user's account in your application. It contains an `accountId` and an `isAdmin` property, indicating whether the user is an admin or not.
+
+```dart
+// Example: Check if user is an admin
+final account = authService.loggedInAccount;
+
+if (account.isAdmin) {
+  // Perform admin-specific actions
+} else {
+  // Perform regular user actions
+}
+```
+
+## AuthService Implementations
+
+Auth supports various authentication service implementations, including file-based storage, cloud-based storage, and environment-specific storage. However, the `.cloud` modifier on its own do not provide any implementation details. It requires `authServiceImplementations` to be passed into `FloodCoreComponent` to specify the exact implementation of the authentication services to use in those environments.
+
+For example, if you pass in `FirebaseCloudRepositoryImplementation` as one of the `repositoryImplementations`, it will make any `.cloud` repositories (or any `.adapting` repositories in a cloud environment) use the Firebase implementation. Similarly, you can provide implementations for other environments or storage mechanisms.
+
+Here's an example of passing repository implementations to `FloodCoreComponent`:
+
+```dart
+await corePondContext.register(FloodCoreComponent(
+    authServiceImplementations: (corePondContext) => [FirebaseAuthServiceImplementation()],
+));
+```
+
+## Hooks
+
+Auth provides the `useLoggedInAccountOrNull()` hook, which returns the currently logged-in account or `null` if the user is not logged in. This hook makes it easy to access the account information in your Flutter widgets.
+
+```dart
+// Example: Display user's email in a widget
+final account = useLoggedInAccountOrNull();
+
+if (account != null) {
+  return Text('Logged in as: ${account.email}');
+} else {
+  return Text('Not logged in');
+}
+```
+
+## Usage
+
+To use Auth in your application, pass an `AuthService` instance to `FloodCoreComponent`. After the `CorePondContext` has been loaded, you can determine the current authentication status of the user.
+
+```dart
+await corePondContext.register(FloodCoreComponent(
+    authService: (context) => AuthService.static.adapting(memoryIsAdmin: true),
+);
+```
+
+With the Auth components integrated into your Flood application, you can easily handle user authentication, customize behavior based on user roles, and provide a seamless authentication experience across different environments and platforms.
