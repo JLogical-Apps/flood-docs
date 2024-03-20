@@ -1,0 +1,64 @@
+# Type
+
+In many programming languages, you can simply provide a `Type` and have the language generate a new instance of that `Type` using reflection. However, Dart does not include the ability to instantiate types during runtime to keep the generated programs lean and efficient. The `Type` module in the Flood framework addresses this limitation by introducing `RuntimeType`s, which allow you to define and instantiate types dynamically.
+
+## Context
+
+To start using the `Type` module, you first need to create a `TypeContext`. This context stores information about every `Type` you want to instantiate, including the types it extends and how to instantiate the type (if it's not abstract).
+
+Here's an example of setting up a `TypeContext`:
+
+```dart
+final context = TypeContext();
+context.registerAbstract<MyAbstractClass>(name: 'MyAbstractClass');
+context.register<MyConcreteClass>(MyConcreteClass.new, name: 'MyConcreteClass', parents: [MyAbstractClass]);
+```
+
+Note that you need to specify a `name` for each of the `Type`s. This is crucial when Dart is compiled to web and minified, as the names of the `Type`s can be jumbled up. Specifying a name ensures that you can create an instance of a `Type` based on its name, like this:
+
+```dart
+context.getByName('MyConcreteClass').createInstance();
+```
+
+For concrete classes, you also need to specify how to generate new instances. In the example above, a new instance of `MyConcreteClass` is created using `MyConcreteClass.new` (Dart syntax sugar for `() => MyConcreteClass()`).
+
+## RuntimeTypes
+
+The `Type` module exports the `RuntimeType` class, which contains information about a single `Type`, such as how to instantiate it, its parents or children, and whether it is abstract.
+
+Once you register a `Type` using a `TypeContext`, you can retrieve its `RuntimeType` using one of the following methods:
+
+```dart
+myConcreteRuntimeType = context.getRuntimeType<MyConcreteClass>();
+myConcreteRuntimeType = context.getRuntimeTypeRuntime(MyConcreteClass);
+myConcreteRuntimeType = context.getByName('MyConcreteClass');
+```
+
+Here's how you can access information from a `RuntimeType`:
+
+```dart
+myConcreteRuntimeType.getAncestors() // [RuntimeType<MyAbstractClass>]
+myConcreteRuntimeType.getChildren() // []
+myConcreteRuntimeType.getDescendants() // []
+myConcreteRuntimeType.isA(myAbstractRuntimeType) // true
+```
+
+## Generating Instances
+
+There are two ways to generate an instance of a `RuntimeType`:
+
+1. Using the `createInstance()` method on the `RuntimeType` itself:
+
+```dart
+myConcreteRuntimeType.createInstance();
+```
+
+2. Using the `construct()` method on the `TypeContext`:
+
+```dart
+typeContext.construct(MyConcreteClass);
+```
+
+Note that attempting to create an instance of an abstract `RuntimeType` will throw an error.
+
+By leveraging the `Type` module in the Flood framework, you can effectively manage and instantiate runtime types in your Dart and Flutter applications. This enables dynamic type creation while maintaining the efficiency and performance benefits of Dart's design philosophy.

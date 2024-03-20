@@ -26,6 +26,7 @@
   "testing": "Testing",
   "environment-banner": "Environment Banner",
   "focus-grabber": "Focus Grabber",
+  "type": "Type",
   "-resources": {
     "type": "separator"
   },
