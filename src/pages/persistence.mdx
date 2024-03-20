@@ -1,0 +1,132 @@
+# Persistence
+
+The Persistence module in Flood is a comprehensive solution for data storage and retrieval across various data sources. It simplifies the process of persisting data like strings, bytes, and files, and also facilitates easy data transformation for more efficient usage within applications. The core package is designed without Flutter dependencies, making it versatile for use in CLI tools, while the extended package integrates seamlessly with Flutter for more specific use cases.
+
+## Data Sources
+
+Flood defines `DataSource`s which allow you to retrieve and save data to a location easily, and also provides utilities to transform the mapped data. Some examples of data sources include:
+
+-   Text files containing String data
+-   Binary files containing a list of bytes
+-   Directories containing a list of files
+-   Flutter assets containing yaml data
+
+## DataSource
+
+A `DataSource` standardizes checking whether data exists, retrieving the data, listening to the data, setting the data, and deleting the data with the following methods:
+
+-   `getX()`: Returns a [ValueStream](/core-concepts/value-streams) of data from the DataSource.
+-   `getOrNull()`: Returns the current data in the DataSource, or `null` if it doesn't exist.
+-   `exists()`: Returns whether the DataSource exists.
+-   `set(data)`: Sets the value of the DataSource to `data`.
+-   `delete()`: Deletes the DataSource.
+
+For example, consider a file DataSource:
+
+```dart
+final fileDataSource = DataSource.static.file(myFile);
+```
+
+You can listen to the contents of the file using:
+
+```dart
+fileDataSource.getX().listen((data) {
+  print('File contents: $data');
+});
+```
+
+You can write to the file using:
+
+```dart
+await fileDataSource.set('myString');
+```
+
+Or delete the file using:
+
+```dart
+await fileDataSource.delete();
+```
+
+DataSources come in very handy since you don't have to memorize or lookup how to retrieve/save/delete data for the various data sources out there. You can simply find the right DataSource and use the standardized methods easily.
+
+## Transforming Data
+
+You can map data from a DataSource to another format. For example, if you have a file `settings.json`, you may not care about the actual String contents of the file, you may just want the `Map<String, dynamic>` representation of the json. You can easily do this by using:
+
+```dart
+final jsonSettingsDataSource = DataSource.static.file(mySettingsFile).mapJson();
+```
+
+Now, if you call `await jsonSettingsDataSource.getOrNull()`, it will return a `Map<String, dynamic>` instead of a String, and you can update the data in the file using a `Map<String, dynamic>` instead of encoding it to a json String first.
+
+Some of the transformers include:
+
+-   `mapJson()`: Maps a String to a `Map<String, dynamic>` by parsing the JSON object.
+-   `mapYaml()`: Maps a String to a `Map<String, dynamic>` by parsing the YAML object.
+-   `mapCsv()`: Maps a String to a `List<List>` by parsing the CSV text.
+-   `mapBase64()`: Maps a String to another String by encoding/decoding the base64 text.
+-   `mapTar()`: Maps a Directory to a Tar file.
+
+## DataSource Implementations
+
+Flood provides several built-in DataSource implementations:
+
+-   `memory()` stores data in memory. This is useful for emulating another DataSource.
+
+```dart
+final memoryDataSource = DataSource.static.memory<int>();
+await memoryDataSource.set(42);
+final value = await memoryDataSource.getOrNull(); // 42
+```
+
+-   `file()` represents a File in a String format.
+
+```dart
+final fileDataSource = DataSource.static.file('path/to/file.txt');
+await fileDataSource.set('Hello, world!');
+final contents = await fileDataSource.getOrNull(); // 'Hello, world!'
+```
+
+-   `rawFile()` represents a File as its raw byte values.
+
+```dart
+final rawFileDataSource = DataSource.static.rawFile('path/to/file.bin');
+await rawFileDataSource.set([0x48, 0x65, 0x6C, 0x6C, 0x6F]);
+final bytes = await rawFileDataSource.getOrNull(); // [0x48, 0x65, 0x6C, 0x6C, 0x6F]
+```
+
+-   `crossFile()` represents a CrossFile. A CrossFile is a platform-independent file that works regardless of whether you are on Flutter, Flutter Web, or the CLI.
+
+```dart
+final crossFileDataSource = DataSource.static.crossFile(myCrossFile);
+await crossFileDataSource.set('Cross-platform content');
+final content = await crossFileDataSource.getOrNull(); // 'Cross-platform content'
+```
+
+-   `directory()` represents a Directory as a list of files.
+
+```dart
+final directoryDataSource = DataSource.static.directory('path/to/directory');
+final files = await directoryDataSource.getOrNull(); // List of files in the directory
+```
+
+-   `crossDirectory()` represents a CrossDirectory. A CrossDirectory contains a list of CrossFiles. This works regardless of whether you are on Flutter, Flutter Web, or the CLI.
+
+```dart
+final crossDirectoryDataSource = DataSource.static.crossDirectory(myCrossDirectory);
+final crossFiles = await crossDirectoryDataSource.getOrNull(); // List of CrossFiles in the directory
+```
+
+-   `url()` is a read-only DataSource that pulls data from a URL.
+
+```dart
+final urlDataSource = DataSource.static.url('https://example.com/data.json').mapJson();
+final data = await urlDataSource.getOrNull(); // Data fetched from the URL as Map<String, dynamic>
+```
+
+-   `asset()` is a read-only DataSource that pulls data from a Flutter asset.
+
+```dart
+final assetDataSource = DataSource.static.asset('assets/config.yaml').mapYaml();
+final yamlData = await assetDataSource.getOrNull(); // YAML data as Map<String, dynamic>
+```

@@ -12,6 +12,9 @@
   "environment": "Environment",
   "drop": "Drop",
   "automate": "Automate",
+  "auth": "Auth",
+  "debug": "Debug",
+  "persistence": "Persistence",
   "-2": {
     "type": "separator"
   },
