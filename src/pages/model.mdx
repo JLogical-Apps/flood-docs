@@ -1,0 +1,104 @@
+# Model
+
+When building a page in a Flutter application, you often need to load data from an API, show a loading indicator while the data is being fetched, display an error message if the request fails, and finally render the data once it's available. Additionally, if the data changes, you want your UI to reactively update to reflect those changes.
+
+Handling all these scenarios manually can be tedious and error-prone. The `Model` class in the Flood framework abstracts this process, making it extremely easy to work with asynchronous, changing, and reactive data.
+
+## Model
+
+A `Model` represents a [ValueStream](/core-concepts/value-streams) of states that can be "loaded". For example, you can create a `Model` that loads data from an API:
+
+```dart
+final model = Model(loader: () => getApiData(...));
+model.state.isEmpty; // true
+model.getOrNull(); // null
+```
+
+You can subscribe to the `Model`'s state stream to observe how its state changes over time. Let's subscribe to it and see how it updates as we load the model:
+
+```dart
+final listener = model.stateX.listen((state) => print(state));
+await model.load();
+model.getOrNull(); // ApiData
+
+// PRINTS
+// FutureValue.empty()
+// FutureValue.loading()
+// FutureValue.loaded(ApiData)
+```
+
+Whenever you need to reload the data from the API (for example, when the user hits a "Refresh" button), you can simply call `model.load()` to fetch the latest data.
+
+## Mapping Models
+
+Sometimes you may have a `Model` but need to transform its loaded value into something else. For example, if you have a function like:
+
+```dart
+Model<ApiData> getModelFromWebsite(String apiUrl) {...}
+```
+
+You may want to use the function's `Model` as a base but only retrieve the response code. You can map the `Model` like this:
+
+```dart
+final responseCodeModel = getModelFromWebsite('https://www.example.com').map((response) => response.code);
+```
+
+With `responseCodeModel`, you get only the part of the `Model` you need.
+
+You can chain multiple `map` calls together to compose `Model`s exactly how you want them.
+
+## Loading
+
+Consider the following example:
+
+```dart
+final model1 = Model(() => aRandomInt());
+final model2 = model1.map((value) => value.toString());
+```
+
+`model2` depends on `model1`. If you call `model1.load()`, it will set its value to a new random integer, which will also update the value of `model2` to the string version of that integer. Similarly, calling `model2.load()` will also reload `model1` since `model2` depends on `model1`.
+
+This can be useful if you have a base `Model` that is used by many other `Model`s. For example, a `settingsModel` that returns a JSON object of the user's settings. You may want to create separate `Model`s that map to specific attributes from the `settingsModel`:
+
+```dart
+final settingsColorModel = settingsModel.map((settings) => settings['color']);
+```
+
+If you update the `settingsModel`, all other `Model`s that depend on it will be updated as well, which you can use to update your UI.
+
+## Transforming Models
+
+Here are some other ways you can transform `Model`s:
+
+-   `asyncMap`: Map a `Model` to another value asynchronously. Loading `model.asyncMap((value) async => await myFuture(value))` will load `model` and use its value to compute the result of `await myFuture(value)`. While the `Future` is being processed, the entire `Model` is considered "loading" until it completes.
+-   `flatMap`: Map a `Model` to another `Model`. Loading `model.flatMap((value) => someOtherModel(value))` will load `model` and use its value to create another `Model`, and then load that `Model`. The entire `Model` is considered "loading" until the generated `Model` completes loading.
+
+## ModelBuilder
+
+`Model`s can be in one of four states: empty, loading, loaded, or error. Rendering the result of a `Model` can be tedious, as you need to listen to the value stream of the model, check its state, and render widgets accordingly. The `ModelBuilder` widget simplifies the process of rendering a `Model`.
+
+Simply provide a `Model` and a `Builder`, and the `ModelBuilder` will listen to the `Model`, and when its state is loaded, it will use the `Builder` to build the widget representing that value.
+
+```dart
+Widget build(BuildContext context) {
+  final settingsModel = useMemoized(() => getSettingsModel());
+  return ModelBuilder(
+    model: settingsModel,
+    builder: (Settings settings) {
+      return ...;
+    },
+  );
+}
+```
+
+The `ModelBuilder` will run the `Builder` with the loaded value of `settingsModel`. While the `Model` is loading, it will render a `StyledLoadingIndicator()` (this can be overridden by passing a `loadingIndicator` to the `ModelBuilder`). If the `Model` has an error, it will print the error and render it using `StyledText.body.error()` (this can be overridden by passing an `errorBuilder` to the `ModelBuilder`). If the `Model` is loaded, it will use the `Builder` to generate the child widget.
+
+## Hooks
+
+The Flood framework provides a few hooks that can be helpful when using `flutter_hooks`:
+
+-   `useModel(Model model)`: Listens to the state of the `Model` and returns its current state.
+-   `useModels(List<Model> models)`: Listens to the state of all the `Model`s and returns a list of their current states.
+-   `useFutureModel(() async => await myFuture())`: Creates a new `Model` based on the provided `Future`, listens to that `Model`, and returns the generated `Model`. You can call `model.load()` to run the `Future` again and update the state of the `Model`.
+
+These hooks make it even easier to integrate `Model`s into your Flutter application, allowing you to reactively update your UI based on the state of your data.

@@ -15,6 +15,7 @@
   "auth": "Auth",
   "debug": "Debug",
   "persistence": "Persistence",
+  "model": "Model",
   "-2": {
     "type": "separator"
   },
