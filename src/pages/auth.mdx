@@ -34,8 +34,6 @@ Auth provides several `AuthService` implementations to cater to different scenar
 -   `cloud()`: An implementation that integrates with cloud providers like Firebase and Appwrite.
 -   `adapting()`: An implementation that adapts to the current environment.
 
-In the `memory()` and `adapting()` implementations, you can set whether logged-in users in the `testing` environment are admins by passing the `memoryIsAdmin: true` parameter. This helps you test the functionality of your app based on the user's admin status.
-
 ## Account
 
 The `Account` class represents a user's account in your application. It contains an `accountId` and an `isAdmin` property, indicating whether the user is an admin or not.
@@ -44,12 +42,25 @@ The `Account` class represents a user's account in your application. It contains
 // Example: Check if user is an admin
 final account = authService.loggedInAccount;
 
+account.accountId; // A unique ID for this account.
+
 if (account.isAdmin) {
   // Perform admin-specific actions
 } else {
   // Perform regular user actions
 }
 ```
+
+In the `memory()` and `adapting()` implementations, you can set whether logged-in users in the `testing` environment are admins by passing the `memoryIsAdmin: true` parameter. This helps you test the functionality of your app based on the user's admin status.
+
+```dart
+final authService = AuthService.static.memory(isAdmin: true); // Accounts created with this AuthService are admins.
+
+final account = await authService.signup(AuthCredentials.email(email: email, password: password));
+account.isAdmin; // true
+```
+
+To understand how the different auth services generate account IDs and determine whether an account is an admin or not, check out the integration page for [Firebase](/firebase#authentication) or [Appwrite](/appwrite)
 
 ## AuthService Implementations
 
@@ -67,7 +78,7 @@ await corePondContext.register(FloodCoreComponent(
 
 ## Hooks
 
-Auth provides the `useLoggedInAccountOrNull()` hook, which returns the currently logged-in account or `null` if the user is not logged in. This hook makes it easy to access the account information in your Flutter widgets.
+Auth provides the `useLoggedInAccountOrNull()` [hook](https://pub.dev/packages/flutter_hooks), which returns the currently logged-in account or `null` if the user is not logged in. This hook makes it easy to access the account information in your Flutter widgets.
 
 ```dart
 // Example: Display user's email in a widget
@@ -84,10 +95,16 @@ if (account != null) {
 
 To use Auth in your application, pass an `AuthService` instance to `FloodCoreComponent`. After the `CorePondContext` has been loaded, you can determine the current authentication status of the user.
 
-```dart
+```dart filename="example_core/lib/pond.dart"
 await corePondContext.register(FloodCoreComponent(
     authService: (context) => AuthService.static.adapting(memoryIsAdmin: true),
 );
 ```
 
-With the Auth components integrated into your Flood application, you can easily handle user authentication, customize behavior based on user roles, and provide a seamless authentication experience across different environments and platforms.
+```dart
+final account = corePondContext.locate<AuthCoreComponent>().loggedInAccount;
+```
+
+## Debugging
+
+Use the [Debug Module](/debug#auth) to view debug information about the currently logged-in user.

@@ -1,6 +1,6 @@
 # Path
 
-The Path module is designed to streamline navigation and data passing in Flutter Web projects or APIs. By enabling the definition of routes that associate specific URLs with corresponding widgets or tasks, the Path module ensures that users are directed to the right part of the application based on the URL accessed. This module is invaluable for developers looking to create well-structured navigation systems and enhance the dynamic nature of their applications.
+The Path Module is designed to streamline navigation and data passing in Flutter Web projects or APIs. By enabling the definition of routes that associate specific URLs with corresponding widgets or tasks, the Path Module ensures that users are directed to the right part of the application based on the URL accessed. This module is invaluable for developers looking to create well-structured navigation systems and enhance the dynamic nature of their applications.
 
 ## Route
 
@@ -12,39 +12,50 @@ A `Route` is an abstract class that you can extend to define your application's 
 
 3. Define how to instantiate the class: This is necessary because every time you navigate to a `Route`, you are returned a copy of the `Route` with all the fields filled in with the correct values.
 
-Here's an example of a `Route`:
+Here's an example of a `Route` that takes a `name` from the path itself and consumes a `repeat` query property.
 
-```dart
-class EnvelopeRoute with IsRoute<EnvelopeRoute>, IsPathDefinitionWrapper {
-  late final envelopeIdProperty = field<String>(name: 'id').required();
-  late final budgetIdProperty = field<String>(name: 'budgetId').required();
-  late final trayIdProperty = field<String>(name: 'trayId');
-
-  @override
-  PathDefinition get pathDefinition => PathDefinition.string('envelope').property(envelopeIdProperty);
+```dart filename="example/lib/pages/greet_page.dart"
+class GreetRoute with IsRoute<GreetRoute> {
+  late final nameProperty = field<String>(name: 'name').required(); // Contains the non-nullable `name` passed into the route.
+  late final repeatProperty = field<int>(name: 'repeat').withFallback(() => 1); // If no `repeat` is given as a query parameter, it will default the value to `1`.
 
   @override
-  List<RouteProperty> get queryProperties => [budgetIdProperty, trayIdProperty];
+  PathDefinition get pathDefinition => PathDefinition.string('greet').property(nameProperty); // The path this handles is `/greet/[name]`.
 
   @override
-  EnvelopeRoute copy() {
-    return EnvelopeRoute();
+  List<RouteProperty> get queryProperties => [repeatProperty]; // Consumes and casts `repeat` from the query parameters, such as `?repeat=3`.
+
+  @override
+  GreetRoute copy() {
+    return GreetRoute();
   }
 }
 ```
+
+## Fields
+
+You can create fields in a `Route` by using a late field with the `field` helper. Define the type of the field in the generic and pass along the name of the field. The `name` is used to determine where to pull values from the query parameters.
+
+The field value will be coerced from the path, so you can define `int` and `double` fields and get their type-coerced values. If the value from the path cannot be coerced to the specified type, an exception is thrown.
+
+You can add modifiers to a field, such as `.required()`, to extend their functionality. Here are the modifiers currently available:
+
+-   `.required()`: Makes the field non-nullable. If the field is `null` when the Route is created, it will throw an exception.
+-   `.withFallback()`: If the field is `null` when the Route is created, it will use a fallback value instead.
 
 ## PathDefinition
 
 A `PathDefinition` defines what the path will look like and determines whether a given URL matches the path. It can include predefined strings or properties. For example:
 
-```dart
-final childPath = PathDefinition.string('parent').string('child');
-childPath.matches('/parent/child?property=1') // true
-childPath.matches('/some/other/path') // false
-childPath.matches('/parent/other') // false
-```
+You can use `.string()` to define a new string segment and `.property()` to define an arbitrary value that fills in a property.
 
-You can use `.string()` to define a new string segment, `.property()` to define an arbitrary value that fills in a property, and `.wildcard()` to match any value within a segment.
+For example:
+
+```dart
+PathDefinition.string('first').string('second') // matches `/first/second`
+PathDefinition.string('user').property(userIdProperty) // matches `/user/[userId]` where `userIdProperty` is a field in the Route itself.
+PathDefinition.string('user').property(userIdProperty).string('edit') // matches `/user/[userId]/edit` where `userIdProperty` is a field in the Route itself.
+```
 
 ## Query Properties
 
@@ -70,7 +81,7 @@ class TestRoute with IsRoute<TestRoute> {
   late final passwordProperty = field<String>(name: 'password');
 
   @override
-  List<RouteProperty> get queryProperties => [passwordProperty];
+  List<RouteProperty> get hiddenProperties => [passwordProperty];
 
   ...
 }
@@ -78,12 +89,6 @@ class TestRoute with IsRoute<TestRoute> {
 context.navigateTo(TestRoute()..passwordProperty.set('hunter2'));
 ```
 
-## Fields
-
-You can create fields in a `Route` by using a late field with the `field` helper. Define the type of the field in the generic and pass along the name of the field. The name is used to determine where to pull values from the query parameters, otherwise it is just used for debugging.
-
-You can add modifiers to a field, such as `.required()`, to make it non-nullable. If a required field is null, it will throw an exception.
-
 ## Usage
 
-`Route`s are used in both the Flutter `AppPondContext` to define the URLs that can be navigated to, and in the `AutomatePondContext` to define the CLI commands that can be used.
+`Route`s are used in the Flutter [AppPondContext](/pond/app) to define the URLs that can be navigated to. The [AutomatePondContext](/pond/automate) uses `AutomatePathDefinition`, which is heavily inspired by the Path Module, to define the routes of the CLI commands that can be used. Eventually, the Path Module will be used to define the routes for backend APIs as well.

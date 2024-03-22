@@ -1,15 +1,78 @@
 # App Pages
 
-In Pond, each screen in your app is represented by an `AppPage`. These pages use the [Path module](/path) to determine which page should be displayed based on the current URL.
+In Pond, each screen in your app is represented by an `AppPage`. [Pond](/pond) uses the [Path Module](/path) to determine which `AppPage` should be displayed based on the current `Route`.
 
-# AppPage
+## AppPage
 
-An `AppPage` is a [HookWidget](https://pub.dev/packages/flutter_hooks) that consists of several key components:
+An `AppPage` is a [HookWidget](https://pub.dev/packages/flutter_hooks) that wraps a `Route`. Every time an `AppPage` is built, the `Route` passed into it has its properties fully set. This means you can use the `Route`'s properties to build the page, determine a redirect, and specify the parent page.
 
--   `pathDefinition`: Specifies the route for the page using the Path module's [PathDefinition](/path).
--   `build()`: Defines how the page should be rendered.
--   `redirectTo()`: An optional function that is called before the page is displayed. If this function returns a non-null `RouteData`, the user will be redirected to that page instead of the current one.
--   `getParent()`: Allows you to specify a parent page for the current page. When warping to the page, the parent page will be displayed first, providing a consistent "back" button behavior.
+An `AppPage` consists of several key components:
+
+-   `onBuild()`: Defines how the page should be rendered. Here, you can access the `Route`'s properties to customize the page content.
+-   `getRedirect()`: An optional function that is called before the page is displayed. If this function returns a non-null `RouteData`, the user will be redirected to that route instead of the current one. You can use the `Route`'s properties to determine the redirect logic.
+-   `getParent()`: Allows you to specify a parent page for the current page based on the `Route`'s properties. When warping to the page, the parent page will be displayed first, providing a consistent "back" button behavior.
+
+Here's an example of a `Route` and `AppPage` for a sample "greet" page, which handles the `/greet/[message]` path and shows the value of the [message] parameter in the page:
+
+```dart filename="example/lib/pages/greet_page.dart"
+class GreetRoute with IsRoute<GreetRoute> {
+  late final messageProperty = field<String>(name: 'message').required(); // Contains the non-nullable `message` passed into the route.
+
+  @override
+  PathDefinition get pathDefinition => PathDefinition.string('greet').property(messageProperty); // The route is for the `/greet/[message]` page.
+
+  @override
+  GreetRoute copy() {
+    return GreetRoute();
+  }
+}
+
+class GreetPage with IsAppPage<GreetRoute> {
+  @override
+  Widget onBuild(BuildContext context, GreetRoute route) {
+    return StyledPage(
+      body: Center(
+        child: Text(route.message.value), // Show the message passed into the route.
+      ),
+    );
+  }
+}
+```
+
+In this example, the `GreetRoute` is passed into the `GreetPage`. The `onBuild()` method of `GreetPage` uses the `message` property of the `GreetRoute` to display the message in the page content.
+
+## Redirects
+
+Redirects in Pond allow you to asynchronously decide whether to redirect the user to a different `Route` when they try to access the current page. This is handy for cases where you want to prevent access to certain pages based on authentication state or user permissions.
+
+For example, if a user tries to access a profile page but is not logged in, you can use a redirect to send them to the login page instead.
+
+```dart filename="example/lib/greet_page.dart"
+class GreetPage with IsAppPage<GreetRoute> {
+  @override
+  FutureOr<RouteData?> getRedirect(AppPondContext context, GreetRoute route) {
+    if (route.message.value == 'John Doe') {
+      return MyOtherRoute().routeData; // Redirect to another page if the Route's [message] is 'John Doe'
+    }
+  }
+  ...
+}
+```
+
+## Parent Pages
+
+Adding a parent to an `AppPage` ensures that when a user navigates directly to that page, the parent page is displayed first. This provides a consistent "back" button behavior across your app.
+
+For instance, if you have a `ProjectDetailsPage` that should always be accessed from the `ProjectListPage`, you can set the `ProjectListRoute` as the parent of the `ProjectDetailsPage`. This way, even if a user navigates directly to the `ProjectDetailsPage` URL, they will see the `ProjectListPage` when they click the "back" button.
+
+```dart filename="example/lib/project_details_page.dart"
+class ProjectDetailsPage with IsAppPage<ProjectDetailsRoute> {
+  @override
+  FutureOr<Route?> getParent(AppPondContext context, HomeRoute route) {
+    return ProjectListRoute();
+  }
+}
+```
 
 ## App Page Wrapper
 
@@ -29,16 +92,75 @@ class SignupPage with IsAppPageWrapper<SignupRoute> {
     ...
   }
 }
+
+class HomePage with IsAppPageWrapper<HomeRoute> {
+  @override
+  AppPage<HomeRoute> get appPage => AppPage<HomeRoute>()
+        .onlyIfLoggedIn()  // Redirects the user to the login page if they are not logged in.
+        .onlyIfAccountExists(); // Redirects the user to the signup page if their auth account is not associated with a UserEntity.
+
+  @override
+  Widget onBuild(BuildContext context, HomeRoute route) {
+    ...
+  }
+}
+
+class AdminPage with IsAppPageWrapper<AdminRoute> {
+  @override
+  AppPage<AdminRoute> get appPage => AppPage<AdminRoute>()
+        .onlyIfAdmin(); // Redirects the user to the login page if they are not logged in or the home page if their account is not an admin account.
+
+  @override
+  Widget onBuild(BuildContext context, AdminRoute route) {
+    ...
+  }
+}
+
+extension RedirectAppPageExtensions<R extends Route> on AppPage<R> {
+  AppPage<R> onlyIfLoggedIn() {
+    return withRedirect((context, route) async { // You can compose multiple `withRedirects` on an `AppPage`.
+      final loggedInUserId = context.find<AuthCoreComponent>().loggedInUserId; // Use the `Auth` Module.
+      if (loggedInUserId == null) {
+        return LoginRoute().routeData;
+      }
+
+      return null;
+    });
+  }
+
+  AppPage<R> onlyIfAccountExists() {
+    return withRedirect((context, route) async {
+      final loggedInUserId = context.find<AuthCoreComponent>().loggedInUserId;
+      if (loggedInUserId == null) {
+        return LoginRoute().routeData;
+      }
+
+      final userExists = await UserEntity.exists( // Use the `Drop` Module.
+        context.dropCoreComponent,
+        userId: loggedInUserId,
+      );
+      if (!userExists) {
+        return SignupRoute().routeData;
+      }
+
+      return null;
+    });
+  }
+
+  AppPage<R> onlyIfAdmin() {
+    return onlyIfAccountExists().withRedirect((context, route) async { // You can define one extension by composing multiple other extensions.
+      final loggedInAccount = context.find<AuthCoreComponent>().loggedInAccount;
+      if (loggedInAccount == null) {
+        return LoginRoute().routeData;
+      }
+
+      if (!loggedInAccount.isAdmin) {
+        return HomeRoute().routeData;
+      }
+
+      return null;
+    });
+  }
+
+}
 ```
-
-## Redirects
-
-Redirects in Pond allow you to asynchronously decide whether to redirect the user to a different `Route` when they try to access the current page. This is handy for cases where you want to prevent access to certain pages based on authentication state or user permissions.
-
-For example, if a user tries to access a profile page but is not logged in, you can use a redirect to send them to the login page instead.
-
-## Parent Pages
-
-Adding a parent to an `AppPage` ensures that when a user navigates directly to that page, the parent page is displayed first. This provides a consistent "back" button behavior across your app.
-
-For instance, if you have a `ProjectDetailsPage` that should always be accessed from the `ProjectListPage`, you can set the `ProjectListPage` as the parent of the `ProjectDetailsPage`. This way, even if a user navigates directly to the `ProjectDetailsPage` URL, they will see the `ProjectListPage` when they click the "back" button.

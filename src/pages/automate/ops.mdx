@@ -6,9 +6,9 @@ Managing backend resources for your Flutter app can be a complex and time-consum
 
 The `OpsEnvironment` class defines the resources to deploy and the target environment to deploy to. It represents a specific configuration for deploying backend resources. Here are a few examples of `OpsEnvironment`:
 
-1. `OpsEnvironment.firebase`: Deploys Firestore Security Rules to a Firebase project. It ensures that the appropriate security rules are applied to your production Firestore database.
+1. [`OpsEnvironment.static.firebase` and `OpsEnvironment.static.firebaseEmulator`](/firebase): Targets Firestore Security Rules.
 
-2. `OpsEnvironment.firebaseEmulator`: Deploys Firestore Security Rules to the Local Firebase Emulator Suite. It allows you to test and validate your security rules locally before deploying to production. If the emulator suite is not currently running, it will automatically install and run it for you.
+2. [`OpsEnvironment.static.appwrite`](/appwrite): Targets Appwrite Projects and Collection Attributes.
 
 The Ops automation provides a flexible and extensible way to define and configure different deployment environments. You can create additional `OpsEnvironment` implementations to support other backend resources or deployment targets based on your project's requirements.
 
@@ -18,10 +18,10 @@ To use the Ops automation in your Flood project, follow these steps:
 
 1. Add the `OpsAutomateComponent` to your `AutomatePondContext` and define the mapping between [environment types](/environment) and `OpsEnvironment`:
 
-```dart
+```dart filename="example_core/tool/automate.dart"
 await automatePondContext.register(OpsAutomateComponent(environments: {
-  EnvironmentType.static.qa: OpsEnvironment.firebaseEmulator,
-  EnvironmentType.static.production: OpsEnvironment.firebase,
+  EnvironmentType.static.qa: OpsEnvironment.static.firebaseEmulator,
+  EnvironmentType.static.production: OpsEnvironment.static.firebase,
 }));
 ```
 

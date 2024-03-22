@@ -1,32 +1,8 @@
+import { Callout } from 'nextra/components';
+
 # CorePondContext
 
-The `CorePondContext` is the foundational component of the Pond module in the Flood framework. It serves as a container and manager for `CorePondComponent`s, which are the building blocks of your application's functionality.
-
-## CorePondComponent
-
-A `CorePondComponent` represents a specific piece of functionality within your application. While `CorePondComponent`s do not add any functionality by themselves, they provide the mechanism for you to add features to your app in a modular and composable way.
-
-Each `CorePondComponent` contains `CorePondComponentBehavior`s that define the component's lifecycle:
-
--   `onRegister`: Called when the component is registered with the CorePondContext. This is where you should perform any initialization that other `CorePondComponent`s might depend on during their registration.
--   `onLoad`: Called after all `CorePondComponent`s have been registered and the `CorePondContext` is loaded. At this point, you can safely locate and interact with other components.
--   `onReset`: Called when the `CorePondContext` is reset. Resetting should return the application to its initial state, as if it had never been run before.
-
-## Locating Components
-
-You can locate any `CorePondComponent` registered within a `CorePondContext` using the `locate` method:
-
-```dart
-corePondContext.locate<MyComponent>()
-```
-
-If there's a possibility that the component hasn't been registered, you can use the locateOrNull method instead:
-
-```dart
-corePondContext.locateOrNull<MyComponent>()
-```
-
-This will return `null` if no component of the specified type is found.
+The `CorePondContext` is the foundational component of the Pond Module in the Flood framework. It serves as a container and manager for `CorePondComponent`s, which are the building blocks of your application's functionality.
 
 ## Lifecycle
 
@@ -36,28 +12,94 @@ A `CorePondContext` follows a specific lifecycle:
 2. `CorePondComponent`s are registered using the `register` method.
 3. Once all components are registered, the `load` method is called, triggering the `onLoad` behavior of each component in the order they were registered.
 
-Loading occurs after registration because some `CorePondComponent`s may need to locate and interact with other components during their loading phase.
+<Callout type="info" emoji="ℹ️">
+    When using a `CorePondContext` in the context of a Flutter App or
+    Automation, it will automatically handle loading your `CorePondContext`.
+    There is no need to manually call this yourself.
+</Callout>
 
-You can manually reset the `CorePondContext` by calling the `reset` method:
+While resetting is typically handled by the [Reset Debug Module](/debug/reset), you can manually reset the `CorePondContext` by calling the `reset` method:
 
 ```dart
 corePondContext.reset()
 ```
 
-This will invoke the `onReset` behavior of each registered component, effectively returning the application to its initial state.
+This will invoke the `onReset` behavior of each registered component, effectively returning the application to its initial state as if it was never installed.
 
-## Usage
+## CorePondComponent
 
-To start using the `CorePondContext`, simply create an instance and register your desired `CorePondComponent`s:
+A `CorePondComponent` represents a specific piece of functionality within your application. While `CorePondComponent`s do not add any functionality by themselves, they provide the mechanism for you to add features to your app in a modular and composable way.
+
+### CorePondComponentBehavior
+
+Each `CorePondComponent` contains `CorePondComponentBehavior`s that define the component's lifecycle:
+
+-   `onRegister`: Called when the component is registered with the `CorePondContext`. This is where you should perform any initialization that other `CorePondComponent`s might depend on during their registration.
+-   `onLoad`: Called after all `CorePondComponent`s have been registered and the `CorePondContext` is loaded. At this point, you can safely locate and interact with other components.
+-   `onReset`: Called when the `CorePondContext` is reset. Resetting should return the application to its initial state, as if it had never been run before.
+
+Here's an example of a `CorePondComponent` that simply stores some state you can use across your app.
+
+```dart filename="example_core/lib/features/hello_world.dart"
+class HelloWorldPondComponent extends CorePondComponent {
+  String? name;
+
+  @override
+  List<CorePondComponentBehavior> get behaviors => [
+        CorePondComponentBehavior(
+          onLoad: (context, component) => name = 'John Doe',
+        )
+      ];
+
+  String greet() {
+    return 'Hello ${name ?? 'N/A'}';
+  }
+
+}
+```
+
+Here's how you would register it to your `CorePondContext`.
+
+```dart filename="example_core/lib/pond.dart"
+final corePondContext = CorePondContext();
+await corePondContext.register(HelloWorldPondComponent());
+```
+
+## Locating Components
+
+You can locate any `CorePondComponent` registered within a `CorePondContext` using the `locate` method:
 
 ```dart
-final corePondContext = CorePondContext();
-await corePondContext.register(MyComponent());
-await corePondContext.register(AnotherComponent());
-
-await corePondContext.load();
+corePondContext.locate<HelloWorldPondComponent>() // returns the instance of `HelloWorldPondComponent` registered in the context.
 ```
+
+If there's a possibility that the component hasn't been registered, you can use the `locateOrNull` method instead:
+
+```dart
+corePondContext.locateOrNull<MyOtherComponent>()
+```
+
+This will return `null` if no component of the specified type is found.
+
+## Pre-Built Components
 
 Flood provides a `FloodCoreComponent` that includes a set of essential components you can use to quickly set up your application.
 
-For more information about the available components, see the documentation for each module.
+Here are the components included:
+
+-   [Type](/type)
+-   [Environment](/environment)
+-   [Logs](/logs)
+-   [Drop](/drop)
+-   [Auth](/auth)
+-   [Action](/action)
+-   And other minor components that don't currently include documentation.
+
+To use the `FloodCoreComponent` within your application, simply register it in your `CorePondContext`.
+
+```dart filename="example_core/lib/pond.dart"
+final corePondContext = CorePondContext();
+await corePondContext.register(FloodCoreComponent(...));
+```
+
+If you want to exclude some of these components from your context, simply do not register `FloodCoreComponent` and register the components you want to include.

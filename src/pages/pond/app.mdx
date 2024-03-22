@@ -1,6 +1,6 @@
 # AppPondContext
 
-The `AppPondContext` is a key component of the Pond module in the Flood framework, designed specifically for building Flutter applications. It extends the functionality of the `CorePondContext` by providing a way to manage and organize `AppPondComponent`s, which are Flutter-specific components that enhance your application's user interface and navigation.
+The `AppPondContext` is a key component of the Pond Module in the Flood framework, designed specifically for building Flutter applications. It extends the functionality of the [CorePondContexts](/pond/core) by providing a way to manage and organize `AppPondComponent`s, which are Flutter-specific components that enhance your application's user interface and navigation.
 
 ## AppPondComponent
 
@@ -8,31 +8,72 @@ An `AppPondComponent` is similar to a `CorePondComponent`, but it offers additio
 
 -   `wrapPage`: Allows you to define widgets that wrap around each page in your app. For example, the [EnvironmentBannerAppComponent](/environment-banner) uses this to display a banner indicating the current environment on every page.
 -   `wrapApp`: Lets you specify widgets that wrap around the entire `MaterialApp`. The [StyleAppComponent](/style) uses this to provide a `Style` to the whole app using a `Provider`.
--   `pages`: A map of `Route`s to their corresponding `AppPage`s, which define the screens in your app and how they are displayed.
+-   `pages`: A map of [Routes](/path) to their corresponding [AppPages](/pond/app/app-pages), which define the screens in your app and how they are displayed.
 
 ## Usage
 
 To start using the `AppPondContext`, create an instance and register your `AppPondComponent`s:
 
-```dart
+```dart filename="example/lib/main.dart"
 final appPondContext = AppPondContext();
 await appPondContext.register(MyAppComponent());
 await appPondContext.register(AnotherAppComponent());
-
-await appPondContext.load();
 ```
 
-Flood offers a FloodAppComponent that includes a set of essential components for building Flutter apps.
+Instead of manually loading the `AppPondContext` and registering routes, you can use the `PondApp.run()` method in your `main.dart` file:
 
-Instead of manually loading the AppPondContext and registering routes, you can use the PondApp.run() method in your main.dart file:
-
-```dart
+```dart filename="example/lib/main.dart"
 PondApp.run(
-  appPondContextGetter: () => appPondContext,
+  appPondContextGetter: () => buildAppPondContext(),
   // ...
 );
 ```
 
-This will load the `AppPondContext`, register all routes, and navigate to the initial page based on the current URL.
+This will build the `AppPondContext`, register all routes, show a splash screen while all the components load, and navigate to the initial page based on the current URL.
 
-For more information about the available `AppPondComponent`s, see the documentation for each module.
+## Locating Components
+
+You can locate any `CorePondComponent` or `AppPondComponent` registered within an `AppPondContext` using the `find` method:
+
+```dart
+appPondContext.find<HelloWorldPondComponent>() // returns the instance of `HelloWorldPondComponent` registered in the context.
+```
+
+If there's a possibility that the component hasn't been registered, you can use the `findOrNull` method instead:
+
+```dart
+appPondContext.findOrNull<MyOtherComponent>()
+```
+
+## Navigation & Routing
+
+`PondApp.run` uses its own custom router for navigation. To learn more about how `AppPondComponent`s work with Flood's navigation system, check out the [Navigation & Routing](/pond/app/navigation) page.
+
+## Pre-built Components
+
+Flood offers a `FloodAppComponent` that includes a set of essential components for building Flutter apps. Many of the following components are included in both the `CorePondContext` and `AppPondContext`. Some of these components simply register a route in the [Debug](/debug) page.
+
+Here are the components included:
+
+-   [Debug](/debug)
+-   [Logs](/logs)
+-   [Device Files](/debug/device-files)
+-   [Focus Grabber](/focus-grabber)
+-   [Auth](/auth)
+-   [Drop](/drop)
+-   [Reset](/debug/reset)
+-   [Firebase Crashlytics](/firebase#firebase-crashlytics)
+-   [Port](/port)
+-   [Style](/style)
+-   [Url Bar](/url-bar)
+-   [Environment Banner](/environment-banner)
+-   And other minor components that don't currently include documentation.
+
+To use the `FloodAppComponent` within your application, simply register it in your `AppPondContext`.
+
+```dart filename="example/lib/main.dart"
+final appPondContext = AppPondContext();
+await appPondContext.register(FloodAppComponent(...));
+```
+
+If you want to exclude some of these components from your app, simply do not register `FloodAppComponent` and register the components you want to include.

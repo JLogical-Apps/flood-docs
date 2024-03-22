@@ -1,0 +1,50 @@
+# StyledList
+
+Allows for the composition of attributes for columns and rows, making it easy to create well-structured and visually appealing lists.
+
+For example, instead of:
+
+```dart
+Scrollbar(
+  child: SingleChildScrollView(
+    physics: BouncingScrollPhysics(),
+    child: Center(
+      child: MasonryGridView.count(
+        padding: EdgeInsets.zero,
+        shrinkWrap: true,
+        crossAxisCount: max(MediaQuery.of(context).size.width ~/ list.childMinSize!, 1),
+        mainAxisSpacing: 4,
+        crossAxisSpacing: 4,
+        physics: NeverScrollableScrollPhysics(),
+        itemCount: children.length,
+        itemBuilder: (context, i) => children[i],
+      ),
+    ),
+  ),
+)
+```
+
+You can use:
+
+```dart
+StyledList
+    .column // Defines this as a column instead of a row.
+    .centered // Centers all widgets on the main axis.
+    .withScrollbar // Makes it scrollable and adds a scrollbar.
+    .withMinChildSize(250)( // Creates a grid where each item has a minimum width of 250.
+        children: [...] // The children of the StyledList.
+)
+```
+
+Here are the bases you can use:
+
+-   `StyledList.row`: Aligns items in a row.
+-   `StyledList.column`: Aligns items in a column.
+
+Here are the modifiers you can use:
+
+-   `.scrollable`: Makes the list scrollable.
+-   `.withScrollbar`: Makes the list scrollable and also includes a `StyledScrollbar`.
+-   `.centered`: Centers the items on the cross-axis.
+-   `.shrink`: Makes the main-axis as small as possible.
+-   `.withMinChildSize()`: Converts the list into a [masonry grid](https://pub.dev/packages/flutter_staggered_grid_view#masonry) where each child has a minimum width, but expands to fill the available space.

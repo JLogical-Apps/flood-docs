@@ -1,0 +1,47 @@
+# StyledText
+
+`StyledText` streamlines text styling by offering a concise syntax for applying various text attributes such as bold, strong emphasis, alignment, and style. This reduces verbosity and enhances readability in code.
+
+Instead of
+
+```dart
+Text(
+  'Check this out!',
+  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+    color: context.colorPalette().foreground.strong,
+    fontStyle: FontStyle.italic,
+  ),
+  textAlign: TextAlign.center,
+);
+```
+
+you can write this:
+
+```dart
+StyledText.body.strong.centered.italics('Check this out!')
+```
+
+The bases you can use are:
+
+-   `StyledText.xs`: Extra small
+-   `StyledText.sm`: Small
+-   `StyledText.body`: Typical body font size
+-   `StyledText.lg`: Large
+-   `StyledText.xl`: Extra large
+-   `StyledText.twoXl`: Extra large (2x)
+-   `StyledText.fourXl`: Extra large (4x)
+
+The modifiers you can use are:
+
+-   `.subtle`: Uses the subtle foreground color from the current ColorPalette.
+-   `.strong`: Uses the strong foreground color from the current ColorPalette.
+-   `.italics`: Uses an italic font.
+-   `.bold`: Uses a bold font.
+-   `.semiBold`: Uses a semi-bold font.
+-   `.thin`: Uses a thin font.
+-   `.centered`: Aligns the text in the center.
+-   `.leftAligned`: Aligns the text to the left.
+-   `.rightAligned`: Aligns the text to the right.
+-   `.display`: Uses a [display font](https://fonts.google.com/knowledge/glossary/display).
+-   `.withColor()`: Uses a specified color.
+-   `.error`: Uses an error color.

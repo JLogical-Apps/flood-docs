@@ -24,7 +24,7 @@ To get started with Firebase in your Flood project, follow these steps:
 
 To initialize the connection to Firebase in your Flood project, add the `FirebaseCoreComponent` as one of the `initialCoreComponents` in the [FloodCoreComponent](/pond/core):
 
-```dart
+```dart filename="example_core/lib/pond.dart"
 FloodCoreComponent(
   initialCoreComponents: [
     FirebaseCoreComponent(),
@@ -38,7 +38,7 @@ This will ensure that the connection to Firebase is established before the rest 
 
 ## Authentication
 
-Flood's [Auth Module](/auth) integrates with Firebase Authentication to provide secure user authentication in your app.
+Flood's [Auth Module](/auth) integrates with [Firebase Authentication](https://firebase.google.com/docs/auth) to provide secure user authentication in your app.
 
 ### Admin Accounts
 
@@ -48,13 +48,11 @@ In Firebase, accounts are considered "admins" if they have a custom claim titled
 
 To use Firebase Authentication in your Flood project, add the `FirebaseAuthServiceImplementation` as one of the `authServiceImplementations` in the `FloodCoreComponent`:
 
-```dart
+```dart filename="example_core/lib/pond.dart"
 FloodCoreComponent(
   authServiceImplementations: [
     FirebaseAuthServiceImplementation(),
-    // ... other auth service implementations
   ],
-  // ... other configuration
 )
 ```
 
@@ -62,7 +60,7 @@ This will configure Firebase Authentication as the implementation for the `AuthS
 
 ## Firestore
 
-Flood seamlessly integrates with Firestore, allowing you to store and retrieve data from your Firestore database. It also provides powerful automation capabilities to streamline your development workflow.
+Flood seamlessly integrates with [Firestore](https://firebase.google.com/docs/firestore), allowing you to store and retrieve data from your Firestore database. It also provides powerful automation capabilities to streamline your development workflow.
 
 ### Usage
 
@@ -72,9 +70,7 @@ To use Firestore as the implementation for your repositories in cloud environmen
 FloodCoreComponent(
   repositoryImplementations: [
     FirebaseCloudRepositoryImplementation(),
-    // ... other repository implementations
   ],
-  // ... other configuration
 )
 ```
 
@@ -82,7 +78,7 @@ This will configure Firestore as the implementation for the `Repository.cloud()`
 
 ### Automatic Firestore Security Rules Generation and Deployment
 
-Flood's [Automate Module](/automate) provides a convenient way to automatically generate Firestore security rules based on your [Drop](/drop) repositories and deploy them directly to your Firebase project.
+Flood's [Automate Module](/automate) provides a convenient way to automatically generate Firestore security rules based on your [Drop](/drop) repositories and deploy them directly to your Firebase project using the [Ops Module](/automate/ops).
 
 To generate and deploy Firestore security rules, run the following command:
 
@@ -90,22 +86,16 @@ To generate and deploy Firestore security rules, run the following command:
 dart tool/automate.dart deploy production
 ```
 
-This command will analyze your Drop repositories, generate the corresponding Firestore security rules, and deploy them to your Firebase project associated with the "production" environment.
+This command will analyze your Drop repository security rules, generate the corresponding Firestore security rules, and deploy them to your Firebase project associated with the "production" environment.
 
 The generated security rules will be based on the access control and validation logic defined in your Drop repositories, ensuring that your Firestore data is properly secured and follows the specified rules.
 
 ## Firebase Crashlytics
 
-Flood integrates with Firebase Crashlytics to capture and report crashes and errors in your app.
+Flood integrates with [Firebase Crashlytics](https://firebase.google.com/docs/crashlytics) to capture and report crashes and errors in your app.
 
 ### Usage
 
-When you use the [FloodAppComponent](/pond/app) in your Flood project, Firebase Crashlytics integration is automatically added. The Flood framework pulls logs from the [Log Module](/logs) and sets the Firebase Crashlytics user identifier to the currently logged-in user from the Auth module.
+When you use the [FloodAppComponent](/pond/app#pre-built-components) in your Flood project, Firebase Crashlytics integration is automatically added. The Flood framework pulls logs from the [Log Module](/logs) and sets the Firebase Crashlytics user identifier to the currently logged-in user from the [Auth Module](/auth).
 
 To ensure that Firebase Crashlytics is properly set up, make sure you have added the necessary dependencies and configuration files to your project as per the Firebase Crashlytics documentation.
-
----
-
-By following this documentation and leveraging the provided components and implementations, you can easily integrate Firebase into your Flood project and take advantage of its authentication, database, messaging, and crashlytics features.
-
-Remember to handle sensitive information securely and follow best practices when working with Firebase and user data.

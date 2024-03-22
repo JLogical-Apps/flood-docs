@@ -1,5 +1,6 @@
 {
   "project-structure": "Project Structure",
   "composition": "Composition",
-  "value-streams": "ValueStreams"
+  "value-streams": "ValueStreams",
+  "file-utilities": "File Utilities"
 }

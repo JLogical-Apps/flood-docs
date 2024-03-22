@@ -1,31 +1,58 @@
 # Debug
 
-Flood's Debug module is a powerful tool for developers to easily debug their Flutter applications. It provides a comprehensive set of features to help you identify and resolve issues quickly and efficiently.
+Flood's Debug Module is a powerful tool for developers to easily debug their Flutter applications. It provides a comprehensive set of features to help you identify and resolve issues quickly and efficiently.
 
 ## Debug Page
 
 The Debug Page is a central hub for accessing various debugging tools. It is shown when navigating to `/_debug` in your app (check out the [Url Bar Module](/url-bar) to see how to navigate there on mobile). This page displays a list of Debug pages, which you can use to view debug information about the app itself.
 
-To add your own debug pages, simply implement the `DebugPageComponent` in a registered [AppComponent](/pond/app). You can refer to the Reset module as an example of how to do this.
+![Debug Home Page](/debug-home-page.png)
+
+To add your own debug pages, simply implement the `DebugPageComponent` in a registered [AppComponent](/pond/app).
 
 ## Debug Dialog
 
 The Debug Dialog is a powerful tool that displays debug information about the current page. It is shown when adding `_debug=true` as a query parameter to the current URL.
 
-To add your own debug dialog panel, implement the `DebugDialogComponent` in a registered `AppComponent`. The Auth module is a great example of how to do this.
+To add your own debug dialog panel, implement the `DebugDialogComponent` in a registered `AppComponent`. The [Auth Module](/auth) is a great example of how to do this.
+
+![Debug Dialog](/debug-dialog.png)
 
 ## Usage
 
 Debug is enabled by default if you use the `FloodAppComponent`. This means that you can start using the debugging features right away, without any additional setup.
 
+## Module Integrations
+
+The Debug Module integrates with a few existing modules that provide debugging capabilities:
+
+### [Logs](/logs)
+
+View the logs from the current app session and all previous app sessions. You can also share logs easily using the "Share" button.
+
+![Logs Debug Page](/debug-logs-page.png)
+
+### [Drop](/drop)
+
+View the queries run to generate the page you are viewing in the debug dialog, along with their results. You can also explore the Drop repositories and entities in the debug page.
+
+![Repository Debug Page](/debug-drop-page.png)
+
+### [Auth](/auth)
+
+View the currently logged-in account ID in the debug dialog.
+
+![Debug Dialog](/debug-dialog.png)
+
 ## Pre-Built Modules
 
-The Debug module comes with several pre-built modules that provide debugging capabilities:
+In addition, the Debug Module provides some of its own custom modules to help with debugging and troubleshooting Flutter apps.
 
--   **[Logs](/logs)**: View the logs from the current app session and all previous app sessions. You can also share logs easily using the "Share" button.
--   **[Auth](/auth)**: View the currently logged-in account ID in the debug dialog.
--   **[Drop](/drop)**: View the queries run to generate the page you are viewing in the debug dialog, along with their results. You can also explore the Drop repositories and entities in the debug page.
--   **[Device Files](/device-files)**: Explore the device files in the debug page. You can view both storage and temporary files, dig into folders, view files, edit them, and delete them.
--   **[Reset](/reset)**: Reset your app as if you have never installed it before. This will clear all Flood-related files from the device, log you out of the current AuthService, and restart the app.
+-   **[Device Files](/debug/device-files)**: Explore the device files in the debug page. You can view both storage and temporary files, dig into folders, view files, edit them, and delete them.
+-   **[Reset](/debug/reset)**: Reset your app as if you have never installed it before. This will clear all Flood-related files from the device, log you out of the current AuthService, and restart the app.
 
 These modules provide a comprehensive set of tools to help you debug your Flutter app effectively.
+
+## Use with Pond
+
+The Debug Module is automatically registered when you use the [FloodAppComponent](/pond/app#pre-built-components).

@@ -1,0 +1,11 @@
+{
+  "text": "StyledText",
+  "list": "StyledList",
+  "container": "StyledContainer",
+  "card": "StyledCard",
+  "button": "StyledButton",
+  "input": "Input Fields",
+  "page": "StyledPage",
+  "message": "StyledMessage",
+  "dialog": "StyledDialog"
+}

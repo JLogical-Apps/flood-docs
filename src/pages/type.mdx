@@ -4,7 +4,7 @@ In many programming languages, you can simply provide a `Type` and have the lang
 
 ## Context
 
-To start using the `Type` module, you first need to create a `TypeContext`. This context stores information about every `Type` you want to instantiate, including the types it extends and how to instantiate the type (if it's not abstract).
+To start using the `Type` Module, you first need to create a `TypeContext`. This context stores information about every `Type` you want to instantiate, including the types it extends and how to instantiate the type (if it's not abstract).
 
 Here's an example of setting up a `TypeContext`:
 
@@ -62,3 +62,11 @@ typeContext.construct(MyConcreteClass);
 Note that attempting to create an instance of an abstract `RuntimeType` will throw an error.
 
 By leveraging the `Type` module in the Flood framework, you can effectively manage and instantiate runtime types in your Dart and Flutter applications. This enables dynamic type creation while maintaining the efficiency and performance benefits of Dart's design philosophy.
+
+## Use with Pond
+
+The Type Module is automatically registered when you use the [FloodCoreComponent](/pond/core#pre-built-components). You can extract the `TypeContext` from the `CorePondContext` like so:
+
+```dart
+final typeContext = corePondContext.locate<TypeCoreComponent>();
+```

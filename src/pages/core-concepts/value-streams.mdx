@@ -14,21 +14,21 @@ In Flood, if a function or getter ends with an X, it indicates that it returns a
 
 Flood provides a set of utility functions to transform ValueStreams while preserving their synchronous value access. Here are some of the notable utilities:
 
-1. `mapWithValue`: This method is similar to the standard `map` operator, but it allows you to retrieve the current value of the transformed stream synchronously.
+1. `mapWithValue`: This method is similar to the standard [map](https://api.flutter.dev/flutter/dart-async/Stream/map.html) operator, but it allows you to retrieve the current value of the transformed stream synchronously.
 
     ```dart
     final mappedStream = valueStream.mapWithValue((value) => value * 2);
     final currentValue = mappedStream.value;
     ```
 
-2. `switchMapWithValue`: This method is equivalent to the switchMap operator, but it maintains the ability to retrieve the current value of the resulting stream synchronously.
+2. `switchMapWithValue`: This method is equivalent to the [switchMap](https://pub.dev/documentation/rxdart/latest/rx/SwitchMapExtension/switchMap.html) operator, but it maintains the ability to retrieve the current value of the resulting stream synchronously.
 
     ```dart
     final switchedStream = valueStream.switchMapWithValue((value) => anotherValueStream);
     final currentValue = switchedStream.value;
     ```
 
-3. `asyncMapWithValue`: This method is similar to the asyncMap operator, but it allows you to retrieve the latest value emitted by the stream. However, it's important to note that the async mapper only works when the stream is being listened to.
+3. `asyncMapWithValue`: This method is similar to the [asyncMap](https://api.flutter.dev/flutter/dart-async/Stream/asyncMap.html) operator, but it allows you to retrieve the latest value emitted by the stream. However, it's important to note that the async mapper only works when the stream is being listened to.
     ```dart
     final asyncMappedStream = valueStream.asyncMapWithValue((value) async => await someAsyncOperation(value));
     asyncMappedStream.listen((value) {
@@ -40,7 +40,7 @@ Flood provides a set of utility functions to transform ValueStreams while preser
 
 Flood also provides utilities to combine multiple `ValueStreams` into a single `ValueStream` while preserving the ability to access the combined value synchronously.
 
--   `combineLatestWithValue`: This method is similar to the `combineLatest` operator from `rxdart`, but it allows you to retrieve the current combined value synchronously.
+-   `combineLatestWithValue`: This method is similar to the [combineLatest](https://pub.dev/documentation/rxdart/latest/rx/CombineLatestStream-class.html) operator, but it allows you to retrieve the current combined value synchronously.
 
     ```dart
     final combinedStream = [valueStream1, valueStream2].combineLatestWithValue((values) => values.reduce((a, b) => a + b));

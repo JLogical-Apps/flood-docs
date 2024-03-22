@@ -1,0 +1,67 @@
+# StyledPage
+
+`StyledPage` is a powerful and flexible component in the Flood framework that provides a structured and visually consistent way to create pages in your application. It offers a range of features and customization options to enhance the user experience and streamline page development.
+
+`StyledPage` can be created in two ways:
+
+1. **Regular Page**: You can create a regular page using the `StyledPage` constructor.
+
+```dart
+StyledPage(
+  titleText: 'Test',
+  actions: [
+    // Shown as a menu button on the top-right that displays a list of actions.
+    ActionItem(
+      titleText: 'Log Out',
+      onPerform: (context) {},
+    ),
+  ],
+  actionWidgets: [
+    // Shown as widgets to the left of the menu button.
+    StyledButton(
+      iconData: Icons.person,
+      onPressed: () {},
+    ),
+  ],
+  onShouldPop: () async {
+    return await calculateShouldPop(); // Returns whether the page should pop or if it should remain where it is.
+  },
+  body: StyledList.column.withScrollbar(
+    children: [
+      StyledText.xl('Welcome!'),
+    ],
+  ),
+)
+```
+
+2. **Refreshable Page**: You can create a page with [pull-to-refresh](https://pub.dev/packages/pull_to_refresh) functionality using `StyledPage.refreshable()`.
+
+```dart
+StyledPage.refreshable(
+  onRefresh: () async {
+    await reloadThePage(); // Called with pull_to_refresh.
+  },
+  titleText: 'Test',
+  body: StyledList.column.withScrollbar(
+    children: [
+      StyledText.xl('Welcome!'),
+    ],
+  ),
+)
+```
+
+Let's explore the key features and properties of `StyledPage`:
+
+1. **Title**: The `titleText` or `title` property sets the title of the page, which is displayed at the top of the page.
+
+2. **Actions**: The `actions` property allows you to define a list of `ActionItem`s that are displayed as a menu button on the top-right corner of the page. When tapped, the menu button reveals a list of actions that the user can perform.
+
+3. **Action Widgets**: The `actionWidgets` property enables you to include additional widgets to the left of the menu button. These widgets can be used to provide quick access to frequently used actions or to display relevant information.
+
+4. **Navigation Control**: The `onShouldPop` callback is triggered when the user attempts to navigate away from the page. It allows you to control whether the page should be popped from the navigation stack or if it should remain where it is. You can perform any necessary asynchronous checks to determine the appropriate behavior.
+
+5. **Body**: The `body` property defines the main content of the page. You can use any widget or combination of widgets to create the desired layout and presentation of the page's content.
+
+6. **Pull-to-Refresh** (optional): If you create a page using `StyledPage.refreshable()`, it supports pull-to-refresh functionality. When the user pulls down on the page, the `onRefresh` callback is triggered, allowing you to perform any necessary data reloading or updates.
+
+![StyledPage Demonstration](/styled-page.png)

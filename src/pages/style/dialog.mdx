@@ -1,0 +1,52 @@
+# StyledDialog
+
+`StyledDialog` is a versatile and customizable dialog component in the Flood framework that allows you to present important information, gather user input, or confirm actions in a visually appealing and interactive manner. It provides a consistent and intuitive way to display dialogs, ensuring a cohesive user experience throughout your application.
+
+`StyledDialog` offers two main approaches for creating dialogs:
+
+1. **Custom Dialog**: You can create a fully customizable dialog using the `StyledDialog` constructor.
+
+```dart
+StyledButton(
+  labelText: 'Show Dialog',
+  onPressed: () {
+    context.showStyledDialog(StyledDialog(
+      titleText: 'Dialog Title',
+      bodyText:
+          'This is the body of the dialog. You can also use `body` instead of `bodyText` to input a widget.',
+      actions: [
+        // Shows a menu button on the top-right that shows a list of actions when pressed.
+        ActionItem(
+          titleText: 'Greet',
+          descriptionText: 'Greets the user',
+          onPerform: (context) => print('Hello World!'),
+        ),
+      ],
+    ));
+  },
+),
+```
+
+The `StyledDialog` constructor allows you to customize various aspects of the dialog, such as the `titleText`, `bodyText` (or `body` for a custom widget), and `actions`. You can define a list of `ActionItem`s to represent the actions available in the dialog, each with its own `titleText`, `descriptionText`, and `onPerform` callback.
+
+2. **Yes/No Dialog**: `StyledDialog` provides a convenient method, `StyledDialog.yesNo()`, for creating dialogs with pre-defined "Cancel" and "OK" buttons.
+
+```dart
+StyledButton(
+  labelText: 'Show Dialog',
+  onPressed: () {
+    context.showStyledDialog(StyledDialog.yesNo(
+      titleText: 'Dialog Title',
+      bodyText:
+          'This is the body of the dialog. You can also use `body` instead of `bodyText` to input a widget.',
+      onAccept: () => print('Accepted!'),
+    ));
+  },
+),
+```
+
+The `StyledDialog.yesNo()` constructor allows you to quickly create a dialog with a title, body text, and two pre-defined buttons: "Cancel" and "OK". You can specify the `onAccept` callback to define the action to be performed when the user selects the "OK" button.
+
+When `context.showStyledDialog()` is called with either the `StyledDialog` constructor or `StyledDialog.yesNo()`, the Flood framework takes care of presenting the dialog to the user. The dialog appears as a modal overlay, dimming the background and focusing the user's attention on the dialog content.
+
+![StyledDialog Demonstration](/styled-dialog.png)

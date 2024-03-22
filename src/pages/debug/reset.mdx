@@ -1,0 +1,11 @@
+# Reset
+
+The Reset module in the Flood framework provides a convenient way to reset your application's state, emulating a freshly installed app. It adds a dedicated page within the `_debug` section, allowing developers to trigger a reset action that clears all stored data and preferences by invoking the `reset` method of the [CorePondContext](/pond/core). After the reset process is complete, the app automatically restarts, ensuring a clean slate.
+
+This module streamlines debugging and testing workflows, enabling you to easily test different scenarios, reproduce specific bug reports, and iterate on code changes without the need for manual uninstallation and reinstallation of the app.
+
+![Reset Debug Page](/reset-debug-page.png)
+
+## Use with Pond
+
+The Reset Module is automatically registered when you use the [FloodAppComponent](/pond/app#pre-built-components).

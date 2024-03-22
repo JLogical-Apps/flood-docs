@@ -1,82 +1,66 @@
+import { Callout } from 'nextra/components';
+
 # Automate
 
-The Automate module is designed to simplify the process of creating and managing CLI automations in your Flood project. By utilizing your existing [CorePondComponent](/pond/core)s, you can create automations that seamlessly integrate with your application's context. For example, the `deploy` automation uses your [Drop](/drop) Repositories to generate Firebase Security Rules, ensuring a smooth deployment process.
+The Automate Module is designed to simplify the process of creating and managing CLI automations in your Flood project. By utilizing your existing [CorePondComponent](/pond/core)s, you can create automations that seamlessly integrate with your application's context. For example, the `deploy` automation uses your [Drop](/drop) Repositories to generate Firebase Security Rules, ensuring a smooth deployment process.
 
 ## AutomateCommand
 
-At the core of the Automate module is the `AutomateCommand` class. It represents a CLI command that can be executed with specific arguments and options. Here's an example of how to define an `AutomateCommand`:
-
-```dart
-class EchoAutomateCommand extends AutomateCommand<EchoAutomateCommand> {
-  @override
-  String get name => 'echo';
-
-  @override
-  String get description => 'Echoes the input.';
-
-  /// The text to echo.
-  late final echoProperty = field<String>(name: 'echo').required();
-
-  /// The amount of times to repeat the text. Defaults to 1 if no value is given.
-  late final repeatProperty = field<int>(name: 'repeat').withFallback(() => 1);
-
-  @override
-  AutomatePathDefinition get pathDefinition => AutomatePathDefinition.property(echoProperty); // The text to echo is part of the "path" of the command.
-
-  @override
-  List<AutomateCommandProperty> get parameters => [repeatProperty]; // If `repeat:3` is passed after the path, it will set `repeatProperty` to `3`.
-
-  @override
-  EchoAutomateCommand copy() {
-    return EchoAutomateCommand();
-  }
-
-  @override
-  Future<void> onRun(AutomateCommandContext context) async {
-    for (var i = 0; i < repeatProperty.value; i++) {
-      context.print(echoProperty.value);
-    }
-  }
-}
-```
-
-In this example, we define a custom `EchoAutomateCommand` that extends the `AutomateCommand` class. We provide a `name` and `description` for the command. The `onRun` method is overridden to define the behavior of the command when it is executed.
-
-Take a look at [Path](/path) to understand how routing and fields work.
+At the core of the Automate Module is the `AutomateCommand` class. It represents a CLI command that can be executed with specific arguments and options. To learn how to create a custom one for your project, refer to the [AutomatePondContext](/pond/automate) page.
 
 ## Usage
 
-To use the Automate module in your Flood project, take a look at the `AutomatePondContext`. It allows you to register your `AutomateCommand`s and configure the automation setup.
+To use the Automate Module in your Flood project, register `AutomatePondComponents` to your `AutomatePondContext`, and then run `Automate.automate(...)` from within the `main` function in the `tool/automate.dart` file. `Automate.automate` will grab the args, find the corresponding `AutomateCommand` to run, parse out the parameters, and run the command.
 
 Here's an example of how to set up the `AutomatePondContext`:
 
-```dart
+```dart filename="example_core/tool/automate.dart"
 final automatePondContext = AutomatePondContext(
   corePondContext: corePondContext,
 );
 
-await automatePondContext.register(MyEchoComponent());
+await automatePondContext.register(GreetComponent());
 
 await Automate.automate(
   context: automatePondContext,
   args: args,
-  appDirectoryGetter: (coreDirectory) => coreDirectory.parent / 'example',
+  appDirectoryGetter: (coreDirectory) => coreDirectory.parent / 'app',
 );
 ```
 
-In this example, we create an instance of `AutomatePondContext` and pass in the `corePondContext`. We then register our custom `MyAutomateCommand` using the `register` method.
+In this example, we create an instance of `AutomatePondContext` and pass in the `corePondContext`. We then register a custom [GreetComponent](/pond/automate#automatecommand) using the `register` method.
 
 Once the `AutomatePondContext` is set up, you can run your automate commands using the following command:
 
 ```bash
-dart tool/automate.dart echo "Hello World" repeat:3
+dart tool/automate.dart greet John repeat:3
 ```
 
-This will execute the `MyEchoComponent` that you defined and registered.
+This will execute the `GreetComponent` that you defined and registered.
+
+If you run `automate.dart` without any parameters, it will display a "usage" screen with information about each of the available commands.
+
+```bash
+dart tool/automate.dart
+```
+
+```
+===[Automate Usage]===
+greet: Greets the user.
+```
+
+<Callout type="warning" emoji="⚠️️">
+    Many of the Pre-Built Modules depend on
+    [dcli](https://pub.dev/packages/dcli), which depends on the "dart:cli
+    waitFor experiment". The Dart team is slowly [phasing this
+    out](https://github.com/dart-lang/sdk/issues/52121), so you may need to run
+    `dart --enable_deprecated_wait_for tool/automate.dart ...` to circumvent
+    this for now.
+</Callout>
 
 ## Pre-Built Modules
 
-The Automate module includes several pre-built modules that provide additional functionality and automation capabilities:
+The Automate Module includes several pre-built modules that provide additional functionality and automation capabilities:
 
 -   [Release](/automate/release): Manages the release process of your app to app stores and testing frameworks.
 -   [Ops](/automate/ops): Automates the deployment of backend resources for your application.

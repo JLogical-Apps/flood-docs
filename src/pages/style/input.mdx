@@ -1,0 +1,154 @@
+# Input Fields
+
+The Flood framework provides a collection of customizable and user-friendly input field components that simplify the process of capturing user input in a visually consistent manner. These components include `StyledTextField`, `StyledReadonlyTextField`, `StyledCheckbox`, `StyledDateTimeField`, `StyledOptionField`, and `StyledRadioField`. Each component offers a range of properties and callbacks to customize its appearance and behavior, ensuring a seamless integration with your application's design.
+
+## StyledTextField
+
+`StyledTextField` is a versatile input field component that allows users to enter and edit text. It supports various customization options, including `labelText`, `hintText`, `leadingIcon`, and `keyboard` type. The `onChanged` callback can be used to react to changes in the text field's value.
+
+```dart
+StyledTextField(
+  labelText: 'Text Field',
+  hintText: 'Input an email',
+  leadingIcon: Icons.text_fields,
+  keyboard: TextInputType.emailAddress,
+  onChanged: (newText) {},
+),
+```
+
+## StyledReadonlyTextField
+
+`StyledReadonlyTextField` is a read-only variant of `StyledTextField` that displays a non-editable text value. It is useful for presenting information that should not be modified by the user. The component supports properties like `labelText`, `text`, and `errorText` to customize its appearance and convey any error states.
+
+```dart
+StyledReadonlyTextField(
+  labelText: 'Read-only',
+  text: 'This value cannot be changed manually.',
+  errorText: 'An error!',
+),
+```
+
+## StyledCheckbox
+
+`StyledCheckbox` is a checkbox component that allows users to toggle a boolean value. It provides a `value` property to define the current state and an `onChanged` callback to handle changes. The `labelText` property can be used to associate a label with the checkbox.
+
+```dart
+StyledList.row.centered(
+  children: [
+    StyledCheckbox(
+      value: false,
+      labelText: 'Unchecked',
+      onChanged: (newValue) {},
+    ),
+    StyledCheckbox(
+      value: true,
+      labelText: 'Checked',
+      onChanged: (newValue) {},
+    )
+  ],
+),
+```
+
+## StyledDateTimeField
+
+`StyledDateTimeField` is an input field component specifically designed for selecting date and time values. It provides a `value` property to set the initial date and time, and an `onChanged` callback to handle changes. The `labelText` property can be used to provide a label for the field.
+
+```dart
+StyledDateTimeField(
+  labelText: 'Date Field',
+  value: DateTime.now(),
+  onChanged: (newText) {},
+),
+```
+
+## StyledOptionField
+
+`StyledOptionField` is a dropdown-style input field that allows users to select a value from a predefined set of options. It provides a `value` property to set the currently selected option, an `options` property to define the available choices, and an `onChanged` callback to handle changes. The `labelText` property can be used to provide a label for the field.
+
+```dart
+StyledOptionField(
+  labelText: 'Options',
+  value: 'Option 1',
+  options: [
+    'Option 1',
+    'Option 2',
+    'Option 3',
+  ],
+  onChanged: (newText) {},
+),
+```
+
+## StyledRadioField
+
+`StyledRadioField` is a radio button component that allows users to select a single value from a group of options. It provides a `value` property to set the currently selected option and an `options` property to define the available choices.
+
+```dart
+StyledList.row.centered(
+  children: [
+    StyledRadioField(
+      value: 'On',
+      options: ['Off', 'On'],
+    ),
+  ],
+),
+```
+
+These input field components provide a consistent and intuitive way to capture user input while maintaining visual coherence throughout your application. By leveraging their customization options and callbacks, you can create interactive and engaging user interfaces with ease.
+
+## Example
+
+This code sample includes a few of the input fields in one page:
+
+```dart
+StyledTextField(
+  labelText: 'Text Field',
+  hintText: 'Input an email',
+  leadingIcon: Icons.text_fields,
+  keyboard: TextInputType.emailAddress,
+  onChanged: (newText) {},
+),
+StyledReadonlyTextField(
+  labelText: 'Read-only',
+  text: 'This value cannot be changed manually.',
+  errorText: 'An error!',
+),
+StyledList.row.centered(
+  children: [
+    StyledCheckbox(
+      value: false,
+      labelText: 'Unchecked',
+      onChanged: (newValue) {},
+    ),
+    StyledCheckbox(
+      value: true,
+      labelText: 'Checked',
+      onChanged: (newValue) {},
+    )
+  ],
+),
+StyledDateTimeField(
+  labelText: 'Date Field',
+  value: DateTime.now(),
+  onChanged: (newText) {},
+),
+StyledOptionField(
+  labelText: 'Options',
+  value: 'Option 1',
+  options: [
+    'Option 1',
+    'Option 2',
+    'Option 3',
+  ],
+  onChanged: (newText) {},
+),
+StyledList.row.centered(
+  children: [
+    StyledRadioField(
+      value: 'On',
+      options: ['Off', 'On'],
+    ),
+  ],
+),
+```
+
+![Input Fields Demonstration](/styled-input.png)

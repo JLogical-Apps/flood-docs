@@ -7,11 +7,10 @@
     "type": "separator"
   },
   "pond": "Pond",
-  "path": "Path",
   "style": "Style",
   "port": "Port",
-  "environment": "Environment",
   "drop": "Drop",
+  "environment": "Environment",
   "automate": "Automate",
   "auth": "Auth",
   "debug": "Debug",
@@ -21,6 +20,7 @@
     "type": "separator",
     "title": "Other"
   },
+  "path": "Path",
   "logs": "Logs",
   "url-bar": "Url Bar",
   "testing": "Testing",

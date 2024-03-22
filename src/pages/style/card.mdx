@@ -1,0 +1,41 @@
+# StyledCard
+
+`StyledCard` is a versatile and opinionated card component in the Flood framework that simplifies the creation of visually appealing and informative content blocks. It supports three emphasis levels (`subtle`, `regular`, and `strong`) and allows for customization of the title, body, leading, and trailing elements. The card's content can be provided as text or custom widgets, offering flexibility in presenting information. `StyledCard` also supports user interaction through the `onPressed` callback and can display a menu of actions using the `actions` parameter. With its intuitive API and emphasis on visual consistency, `StyledCard` enables developers to create engaging and interactive card-based layouts effortlessly.
+
+```dart
+StyledCard.subtle(
+  titleText: 'Subtle',
+  bodyText: 'Subtle Card',
+  leadingIcon: Icons.border_clear,
+),
+StyledCard(
+  titleText: 'Regular',
+  body: StyledMarkdown('This is a **Regular** _StyledCard_'),  // You can use `body` instead of `bodyText` if you want to use a widget
+  leading: StyledIcon( // You can use `leading` instead of `leadingIcon` if you want to use a widget
+    Icons.square,
+  ),
+),
+StyledCard.strong(
+  titleText: 'Strong',
+  bodyText: 'This has high visual importance.',
+  leadingIcon: Icons.fiber_smart_record_rounded,
+  trailingIcon: Icons.chevron_right,
+  onPressed: () {
+    // You can listen to presses.
+  },
+),
+StyledDivider(),
+StyledCard(
+  titleText: 'Card with actions',
+  actions: [
+    // Show a menu button with a list of actions when pressed.
+    ActionItem(
+      titleText: 'Greet',
+      descriptionText: 'Print a greeting',
+      onPerform: (context) => context.log('Hello World!'),
+    ),
+  ],
+),
+```
+
+![Styled Card Demonstration](/styled-card.png)

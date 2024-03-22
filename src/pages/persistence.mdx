@@ -1,6 +1,6 @@
 # Persistence
 
-The Persistence module in Flood is a comprehensive solution for data storage and retrieval across various data sources. It simplifies the process of persisting data like strings, bytes, and files, and also facilitates easy data transformation for more efficient usage within applications. The core package is designed without Flutter dependencies, making it versatile for use in CLI tools, while the extended package integrates seamlessly with Flutter for more specific use cases.
+The Persistence Module in Flood is a comprehensive solution for data storage and retrieval across various data sources. It simplifies the process of persisting data like strings, bytes, and files, and also facilitates easy data transformation for more efficient usage within applications. The Core package is designed without Flutter dependencies, making it versatile for use in CLI tools, while the App package integrates seamlessly with Flutter for more specific use cases.
 
 ## Data Sources
 
@@ -67,6 +67,8 @@ Some of the transformers include:
 -   `mapBase64()`: Maps a String to another String by encoding/decoding the base64 text.
 -   `mapTar()`: Maps a Directory to a Tar file.
 
+You can create a custom mapping using the `map()` function, which allows you to specify exactly how to map the raw data to the mapped data and vice-versa.
+
 ## DataSource Implementations
 
 Flood provides several built-in DataSource implementations:
@@ -95,7 +97,7 @@ await rawFileDataSource.set([0x48, 0x65, 0x6C, 0x6C, 0x6F]);
 final bytes = await rawFileDataSource.getOrNull(); // [0x48, 0x65, 0x6C, 0x6C, 0x6F]
 ```
 
--   `crossFile()` represents a CrossFile. A CrossFile is a platform-independent file that works regardless of whether you are on Flutter, Flutter Web, or the CLI.
+-   `crossFile()` represents a [CrossFile](#crossfile--crossdirectory). A CrossFile is a platform-independent file that works regardless of whether you are on Flutter, Flutter Web, or the CLI.
 
 ```dart
 final crossFileDataSource = DataSource.static.crossFile(myCrossFile);
@@ -110,7 +112,7 @@ final directoryDataSource = DataSource.static.directory('path/to/directory');
 final files = await directoryDataSource.getOrNull(); // List of files in the directory
 ```
 
--   `crossDirectory()` represents a CrossDirectory. A CrossDirectory contains a list of CrossFiles. This works regardless of whether you are on Flutter, Flutter Web, or the CLI.
+-   `crossDirectory()` represents a [CrossDirectory](#crossfile--crossdirectory). A CrossDirectory contains a list of CrossFiles. This works regardless of whether you are on Flutter, Flutter Web, or the CLI.
 
 ```dart
 final crossDirectoryDataSource = DataSource.static.crossDirectory(myCrossDirectory);
@@ -129,4 +131,27 @@ final data = await urlDataSource.getOrNull(); // Data fetched from the URL as Ma
 ```dart
 final assetDataSource = DataSource.static.asset('assets/config.yaml').mapYaml();
 final yamlData = await assetDataSource.getOrNull(); // YAML data as Map<String, dynamic>
+```
+
+## CrossFile & CrossDirectory
+
+Flood introduces the concepts of `CrossFile` and `CrossDirectory` to provide a platform-independent way of working with files and directories. These abstractions allow you to write code that works seamlessly across Flutter, Flutter Web, and CLI environments. In particular, they address the typical issue with Flutter Web, where there is no direct access to the file system. `CrossFile` and `CrossDirectory` take care of this limitation by emulating a file system using the web's local storage, enabling you to work with files and directories consistently across all platforms.
+
+A `CrossFile` represents a file that can be read from and written to, while a `CrossDirectory` represents a directory that can contain `CrossFile`s and sub-`CrossDirectory`s. Both `CrossFile` and `CrossDirectory` implement the `CrossElement` interface, which provides common methods like `path`, `create()`, `exists()`, and `delete()`. Additionally, `CrossFile` offers methods for reading and writing file contents, such as `readX()`, `read()`, and `write()`. `CrossDirectory`, on the other hand, provides methods for listing and accessing its contents, including `listX()`, `listOrNull()`, `getDirectory()`, and `getFile()`.
+
+The [Environment Module](/environment#filesystem) provides a `FileSystem`, which contains a `CrossDirectory` for both the storage and temp folders.
+
+```dart
+final fileSystem = context.find<EnvironmentConfigCoreComponent>().fileSystem;
+final storage = fileSystem.storageDirectory; // CrossDirectory
+final temp = fileSystem.tempDirectory; // CrossDirectory
+
+final files = await storage.listOrNull(); // List<CrossFile>?
+
+final settings = storage - 'settings.json'; // CrossFile
+
+await settings.exists(); // true if the file exists.
+await settings.create(); // creates the file if it does not exist.
+await settings.readAsString(); // read the file contents as String. Throws if it does not exist.
+await settings.delete(); // deletes the file.
 ```

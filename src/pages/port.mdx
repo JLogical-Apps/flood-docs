@@ -1,6 +1,6 @@
 # Port
 
-When building forms in Flutter, developers often encounter challenges such as manual form definition, validation logic, and UI consistency. The Port module addresses these pain points by providing a powerful API for defining form structures, handling validation, and automatically generating user interface components.
+When building forms in Flutter, developers often encounter challenges such as manual form definition, validation logic, and UI consistency. The Port Module addresses these pain points by providing a powerful API for defining form structures, handling validation, and automatically generating user interface components.
 
 ## Core Concepts
 
@@ -25,19 +25,24 @@ In this example, the `Port` defines two fields: "name" and "email". The "name" f
 
 ### Fields
 
-The Port module provides a set of default `PortField` types to cover common form field scenarios:
+The Port Module provides a set of default `PortField` types to cover common form field scenarios:
 
 -   `PortField.string()`: Represents a non-nullable String field.
+-   `PortField.int()`: Represents an int field.
+-   `PortField.bool()`: Represents a boolean field.
 -   `PortField.dateTime()`: Represents a DateTime field.
 -   `PortField.option(options)`: Allows selecting a value from a predefined list of options.
--   `PortField.port(port)`: Embeds another `Port` as a field, enabling nested form structures.
+-   `PortField.embedded(port)`: Embeds another `Port` as a field, enabling nested form structures.
 -   `PortField.stage(options, portMapper)`: Provides a list of options and maps each option to a specific `Port`, allowing dynamic form stages based on user selections.
+-   `PortField.file()`: Represents a [CrossFile](/persistence).
 
 You can further customize `PortField`s by applying modifiers to add validation rules or transform the field data. Some common modifiers include:
 
 -   `.isNotNull()`: Ensures the field value is not null.
 -   `.isNotBlank()`: Ensures a String field is not null or blank.
 -   `.isEmail()`: Validates that a String field is in a valid email format.
+-   `.isPhone()`: Validates that a String field is in a valid phone number format.
+-   `.withAllowedFileTypes()`: Validates that a cross file field has a valid file type.
 -   `.withFallback(fallback)`: Specifies a fallback value to use if the field value is null.
 -   `.map(mapper)`: Transforms the field value using a provided mapper function.
 -   `.withValidator(validator)`: Adds a custom validation rule using a `Validator` function.
@@ -64,9 +69,23 @@ result.data['name'] // 'John Doe'
 
 By default, a `Port` returns a `Map<String, dynamic>` containing the field names as keys and their corresponding values. However, you can transform the form data into a custom object using the `.map(mapper)` modifier. This allows you to create a `Port` that returns a specific type, making it more convenient to work with the form results.
 
+```dart
+final userPort = Port.of({
+  'name': PortField.string().isNotBlank(),
+  'email': PortField.string().isNotBlank().isEmail(),
+}).map((values, port) => User(name: values['name'], email: values['email']));
+
+port.setValue(name: 'name', value: 'John Doe');
+port.setValue(name: 'email', value: 'john@test.com');
+
+final userResult = await port.submit();
+result.isValid // true
+result.data // The mapped `User` object
+```
+
 ## Flutter Integration
 
-The Port module seamlessly integrates with Flutter, providing widgets and builders to simplify the rendering and management of form fields within your application.
+The Port Module seamlessly integrates with Flutter, providing widgets and builders to simplify the rendering and management of form fields within your application.
 
 ### PortBuilder
 
@@ -96,25 +115,32 @@ PortFieldBuilder(
 
 ## Auto-generated UI
 
-The Port module takes form development to the next level by providing the ability to automatically generate user interface components based on a `Port` definition. This feature significantly reduces the amount of boilerplate code required to build form screens and ensures a consistent look and feel across your application.
+The Port Module takes form development to the next level by providing the ability to automatically generate user interface components based on a `Port` definition. This feature significantly reduces the amount of boilerplate code required to build form screens and ensures a consistent look and feel across your application.
 
-The auto-generated UI considers the different `PortField` types, their modifiers, and any additional metadata provided. It intelligently maps each field to an appropriate UI component based on its type and characteristics. For example:
+The auto-generated UI considers the different `PortField` types, their modifiers, and any additional metadata provided. It intelligently maps each field to an appropriate UI component based on its type and characteristics, and also renders any validation errors underneath each field. For example:
 
 -   `PortField.string()` is rendered as a text input field.
 -   `PortField.int()` is rendered as a text input field with int validation.
+-   `PortField.bool()` is rendered as a checkbox.
 -   `PortField.dateTime()` is rendered as a date picker.
--   `PortField.option(options)` is rendered as a dropdown.
+-   `PortField.option()` is rendered as a dropdown.
+-   `PortField.crossFile()` is rendered as a file input field.
 -   `PortField.stage(options, portMapper)` is rendered as a multi-step form, where the user can select an option and dynamically load and view the corresponding `Port` UI.
 
 The auto-generated UI also takes into account the modifiers applied to the fields. For instance:
 
+-   `.withDisplayName()` adds a label above the field.
+-   `.withHint()` adds a hint in the field.
 -   `.isNotNull()` adds a required field indicator.
--   `.isEmail()` applies email validation and displays an error message if the entered value is not a valid email address.
+-   `.multiline()` sets a text field as multiline.
+-   `.isName()` sets the TextInputType to `TextInputType.name`.
+-   `.isEmail()` sets the TextInputType to `TextInputType.email`.
+-   `.isPhone()` sets the TextInputType to `TextInputType.phoneNumber`.
 -   `.isSecret()` masks the input as a password field.
 -   `.multiline()` renders a multiline text input field.
+-   `.withAllowedFileTypes()` sets the file picker to choose only files with the given file extensions.
+-   `.onlyImages()` sets the file picker to choose only images.
 -   `.color()` renders a color picker instead of a regular text input.
-
-Additionally, any display names, hints, or custom metadata provided through modifiers like `.withDisplayName()` and `.withHint()` are incorporated into the generated UI to enhance usability and clarity.
 
 The auto-generated UI aims to provide a functional and visually appealing form layout out of the box, saving developers time and effort in building form screens manually. However, it also offers flexibility through overrides and customization options, allowing developers to fine-tune the generated UI to match their specific design requirements.
 
@@ -122,8 +148,34 @@ The auto-generated UI aims to provide a functional and visually appealing form l
 
 You can render a `Port` in various ways:
 
--   As a dialog: Use `context.showDialog(StyledPortDialog(port: port))` to display the form fields in a dialog window. You can override the `onAccept` callback to customize the behavior when the user submits the form.
+-   As a [StyledDialog](/style/dialog): Use `context.showDialog(StyledPortDialog(port: port))` to display the form fields in a dialog window. You can override the `onAccept` callback to customize the behavior when the user submits the form.
 -   As a widget: Use `StyledObjectPortBuilder(port: port)` to render the form fields as a widget within your application.
+
+Here's an example of how to automatically render a port:
+
+```dart
+final port = useMemoized(() => Port.of({
+          'name': PortField.string().withDisplayName('Name').withHint('John Doe').isNotBlank().isName(),
+          'email': PortField.string().withDisplayName('Email').isNotBlank().isEmail(),
+          'password': PortField.string().withDisplayName('Password').isNotBlank().isSecret(),
+          'bio': PortField.string().withDisplayName('Bio').multiline(),
+          'age': PortField.int().withDisplayName('Age').isNotNull(),
+          'favoriteColor': PortField.int().withDisplayName('Favorite Color').color(),
+          'profilePicture': PortField.file().withDisplayName('Profile Picture').onlyImages(),
+        }));
+    return StyledPage(
+      body: StyledList.column.withScrollbar(
+        children: [
+          StyledObjectPortBuilder(
+            port: port,
+          ),
+        ],
+      ),
+    );
+  }
+```
+
+![Automatic UI Generation Demonstration](/port-ui.png)
 
 ### Overrides
 
@@ -131,29 +183,16 @@ If you need to customize the appearance or behavior of specific form fields, you
 
 ```dart
 StyledObjectPortBuilder(
-  port: userPort,
-  order: [
-    User.nameField,
-    User.emailField,
+  port: userPort, // A port that contains a 'name' and 'email' field.
+  order: [ // Change the order of the rendered fields.
+    'email',
+    'name',
   ],
   overrides: {
-    User.nameField: StyledTextPortField(
-      fieldName: User.nameField,
-      labelText: 'OVERRIDE',
+    'email': StyledTextPortField(
+      fieldName: 'email',
+      leadingIcon: Icons.email, // Override the text field with a leading icon email.
     ),
   }
 ),
 ```
-
-## Usage
-
-To start using the Port module in your Flood application:
-
-1. Define your form structure using `Port` and `PortField`.
-2. Use `PortBuilder` and `PortFieldBuilder` to build custom form widgets if needed.
-3. Render the form using `StyledPortDialog` or `StyledObjectPortBuilder` for auto-generated UI.
-4. Handle form submission and validation results to process the form data.
-
-With the Port module, you can effortlessly create dynamic and validated forms while maintaining a clean and consistent user interface throughout your Flutter application.
-
-For more advanced use cases and detailed examples, refer to the Port API documentation and explore the sample code provided in the Flood framework repository.

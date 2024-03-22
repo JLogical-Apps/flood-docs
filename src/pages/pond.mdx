@@ -8,6 +8,8 @@ Pond introduces the concept of contexts, which are essential for managing and or
 
 -   [CorePondContext](/pond/core): The `CorePondContext` is the foundation of Pond and is responsible for managing `CorePondComponent`s. It provides a basic structure for defining and registering components, as well as handling their lifecycle.
 -   [AppPondContext](/pond/app): The `AppPondContext` extends the functionality of Pond to the application level. It manages `AppPondComponent`s, which are specifically designed to work with Flutter applications. `AppPondComponent`s can wrap pages, define routes, and handle navigation within your app.
--   [AutomatePondContext](/pond/automate): The `AutomatePondContext` is used to manage components related to the [Automate module](/automate). It handles the registration and execution of CLI automations within your Flood project.
+-   [AutomatePondContext](/pond/automate): The `AutomatePondContext` is used to manage components related to the [Automate Module](/automate). It handles the registration and execution of CLI automations within your Flood project.
 
 Both the `AppPondContext` and `AutomatePondContext` build upon the `CorePondContext`, leveraging its core functionality to provide additional capabilities specific to their respective domains.
+
+![Pond Contexts Diagram](/pond-contexts-diagram.png)
