@@ -41,6 +41,18 @@ const config: DocsThemeConfig = {
     useNextSeoProps() {
         return {
             titleTemplate: '%s - Flood',
+            description:
+                'Flood is a comprehensive Flutter and Dart framework that streamlines app development with a modular architecture, extensive features, and intuitive APIs. The documentation site provides guides, tutorials, and API references to help developers quickly build high-quality, visually appealing, and performant applications.',
+            openGraph: {
+                images: [
+                    {
+                        url: '/opengraph.png',
+                        width: 1200,
+                        height: 630,
+                        alt: 'Flood Logo',
+                    },
+                ],
+            },
         };
     },
 };
