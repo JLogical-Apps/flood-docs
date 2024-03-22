@@ -44,7 +44,6 @@ const config: DocsThemeConfig = {
                         height={40}
                     />
                 </a>
-                ;
             </div>
         ),
     },
