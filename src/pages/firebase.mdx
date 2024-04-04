@@ -44,6 +44,38 @@ Flood's [Auth Module](/auth) integrates with [Firebase Authentication](https://f
 
 In Firebase, accounts are considered "admins" if they have a custom claim titled "admin". To set this custom claim on specific accounts, you need to create a Firebase Function and execute it manually.
 
+Here is an example of a Firebase Function that would add the "admin" custom claim to a user whenever you add a document to the "admin" collection with a "uid" property:
+
+```typescript filename="example_core/firebase/functions/src/index.ts"
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
+
+admin.initializeApp();
+
+export const addAdminClaim = functions.firestore
+    .document('admin/{adminId}')
+    .onCreate(async (snapshot, context) => {
+        const adminData = snapshot.data();
+        const uid = adminData.uid;
+
+        try {
+            await admin.auth().setCustomUserClaims(uid, { admin: true });
+            console.log(`Admin claim added to user with UID: ${uid}`);
+
+            // Update the document with "complete: true"
+            await snapshot.ref.update({ complete: true });
+            console.log(
+                `Document updated with "complete: true" for UID: ${uid}`
+            );
+        } catch (error) {
+            console.error(
+                `Error adding admin claim to user with UID: ${uid}`,
+                error
+            );
+        }
+    });
+```
+
 ### Usage
 
 To use Firebase Authentication in your Flood project, add the `FirebaseAuthServiceImplementation` as one of the `authServiceImplementations` in the `FloodCoreComponent`:
