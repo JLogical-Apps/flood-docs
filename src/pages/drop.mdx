@@ -6,7 +6,7 @@ The Drop Module in the Flood framework aims to provide a consistent way to model
 
 `ValueObject`s define the structure and format of the data associated with an `Entity`. They are immutable and consist of a set of behaviors that specify validation rules, fallback values, and other data-related constraints. Here's an example of defining a `ValueObject`:
 
-```dart
+```dart filename="example_core/lib/features/user/user.dart"
 class User extends ValueObject {
   late final nameProperty = field<String>(name: 'name').withFallback(() => 'John');
   late final emailProperty = field<String>(name: 'email').isNotBlank();
@@ -88,9 +88,50 @@ These modifiers allow you to configure repositories to adapt to different enviro
 
 ### Security
 
-`Repository`s offer security features to control access to data. You can define permission levels for read, create, update, and delete operations, ensuring that only authorized users can perform specific actions on the data.
+`Repository`s in Drop offer robust security features to control access to data. You can define granular permission levels for read, create, update, and delete operations, ensuring that only authorized users can perform specific actions on the data. The security rules are enforced locally, and can then be accessed and analyzed by Integrations, such as [Firebase](/firebase#automatic-firestore-security-rules-generation-and-deployment), to deploy security rules to the backend.
 
-These security rules can then be accessed and analyzed by Integrations, such as [Firebase](/firebase#automatic-firestore-security-rules-generation-and-deployment), to deploy security rules to the backend.
+#### Permission Types
+
+Drop provides several types of permissions to control access to repositories:
+
+1. **`Permission.all`**: Allows access to all users, regardless of their authentication status.
+2. **`Permission.none`**: Blocks access to all users, effectively disabling the corresponding operation.
+3. **`Permission.authenticated`**: Allows access only to authenticated users.
+4. **`Permission.admin`**: Allows access only to users with admin privileges.
+5. **`Permission.equals`**: Allows access based on the equality of two fields, such as comparing the `id` of the entity with the `loggedInUserId`.
+
+### Enforcing Security with `withSecurity`
+
+The `withSecurity()` modifier on a repository allows you to enforce security rules. When applied, the repository will check the specified permissions before allowing any operation to proceed.
+
+Here's an example of applying security rules to a repository:
+
+```dart filename="example_core/lib/features/todo/todo_repository.dart"
+class TodoRepository with IsRepositoryWrapper {
+  @override
+  late Repository repository = Repository.forType<TodoEntity, Todo>(...).adapting('todo')
+    .withSecurity(RepositorySecurity.all(
+        Permission.admin |
+            Permission.equals(PermissionField.propertyName(Todo.userField), PermissionField.loggedInUserId),
+      ));
+}
+
+```
+
+In this example, the `TodoRepository` is configured to allow access only when the `user` field matches the `loggedInUserId` from the [Auth Module](/auth), effectively restricting users to access or modify only their own todos.
+
+#### Read Permissions and Query Modification
+
+When read permissions are set on a repository, any queries executed on that repository are automatically modified to limit the records that can be fetched based on the specified permissions.
+
+For example, consider the `TodoRepository` above. If you were to run `Query.from<TodoEntity>().all()`, the query gets automatically modified like so:
+
+1. If you are an admin user, the query does not get modified because `Permission.admin` is passed.
+2. If you are not an admin user, the query is modified to include an additional `.where('user').isEqualTo(loggedInUserId)` behind the scenes, ensuring that the Flutter application does not attempt to read `TodoEntity`s it does not have access to.
+
+#### Bypassing local security
+
+`.withSecurity` will automatically enforce both query-modification and write permissions locally before it reaches the source database. If you would like to bypass the local security checks for administration or testing purposes, use `context.dropCoreComponent.runWithoutSecurity()`.
 
 ## Making Updates
 
