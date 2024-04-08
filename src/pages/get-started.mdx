@@ -20,9 +20,39 @@ Before diving into using Flood, you may want to explore its capabilities and see
 
 By exploring these resources, you can gain a better understanding of Flood's capabilities and determine if it's the right fit for your project.
 
-## Use the Flood Template
+## Set Up Flood
 
-You can quickly get started with your project using the Flood template. The template is designed to simplify project setup and ensure you're on the right track from the beginning.
+You have a few options you can use to set up a Flood project.
+
+### Use Mason
+
+[Mason](https://pub.dev/packages/mason) is a tool you can use to easily set Flood up in a new project.
+
+To use Mason, follow these steps:
+
+1. Install Mason
+
+```bash
+dart pub global activate mason_cli
+```
+
+2. Add the Flood brick
+
+```bash
+mason add --global flood
+```
+
+3. Make the Flood brick within the parent directory you want to create your project in.
+
+```bash
+mason make flood
+```
+
+4. Follow the on-screen instructions to fill out the details of your project. Your Flood project will then be generated!
+
+### Use the Flood Template
+
+If you have issues using Mason to set Flood up, you can use the Template project as a fallback.
 
 To use the Flood template, follow these steps:
 
