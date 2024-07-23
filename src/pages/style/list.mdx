@@ -43,8 +43,10 @@ Here are the bases you can use:
 
 Here are the modifiers you can use:
 
+-   `.wrap`: Wraps children just like a `Wrap`. For example, `StyledList.row.wrap` will align items horizontally until it runs out of space, at which point it will lay items one column down.
 -   `.scrollable`: Makes the list scrollable.
 -   `.withScrollbar`: Makes the list scrollable and also includes a `StyledScrollbar`.
 -   `.centered`: Centers the items on the cross-axis.
 -   `.shrink`: Makes the main-axis as small as possible.
 -   `.withMinChildSize()`: Converts the list into a [masonry grid](https://pub.dev/packages/flutter_staggered_grid_view#masonry) where each child has a minimum width, but expands to fill the available space.
+-   `.withMaxSize()`: Limits the maximum size of the list, which will then allow the scroll container to take over.

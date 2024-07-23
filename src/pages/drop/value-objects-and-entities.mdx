@@ -1,0 +1,55 @@
+# ValueObjects and Entities
+
+## ValueObjects
+
+`ValueObject`s define the structure and format of the data associated with an `Entity`. They are immutable and consist of a set of behaviors that specify validation rules, fallback values, and other data-related constraints. Here's an example of defining a `ValueObject`:
+
+```dart filename="example_core/lib/features/user/user.dart"
+class User extends ValueObject {
+  late final nameProperty = field<String>(name: 'name').withFallback(() => 'John');
+  late final emailProperty = field<String>(name: 'email').isNotBlank();
+  late final notesProperty = field<String>(name: 'notes');
+  late final itemsProperty = field<String>(name: 'items').list();
+
+  @override
+  late final List<ValueObjectBehavior> behaviors = [
+    nameProperty,
+    emailProperty,
+    notesProperty,
+    itemsProperty,
+    creationTime(),
+  ];
+}
+
+```
+
+`ValueObject`s can have different behaviors and modifiers to customize their properties:
+
+-   `field<T>()`: A simple behavior that stores a value of type `T`.
+-   `reference<EntityType>()`: A field that stores a String but indicates it references an `EntityType`. View [Reference Fields](#reference-fields) for more info on how they are used within auto-generated UI.
+-   `computed()`: Computes a value to store in the repository.
+
+Modifiers for behaviors include:
+
+-   `.required()`: Cannot be null. Sets the field to be non-nullable.
+-   `.isNotBlank()`: Cannot be null or blank. Sets the field to be non-nullable.
+-   `.withFallback()`: If null, uses a fallback. Sets the field to be non-nullable.
+-   `.withValidator()`: Adds a `Validator` to the field.
+-   `.isEmail()`: Indicates the field must be an email.
+-   `.time()`: Parses Strings from the repository into `Timestamp` to be used in the code.
+-   `.asset()`: Converts a String id into an asset used by the [Asset Module](/asset). Reference [this](asset#using-assets-in-valueobjects) for more info on how to configure the `.asset` modifier. This modifier not only manages the reference to the asset but also handles the lifecycle of the asset itself.
+-   `.embedded()`: Required for `field<ValueObjectType>()` so that it can extract data to the `ValueObjectType`.
+-   `.list()`: A list of the field type. For example, `field<String>().list()` is a `List<String>`.
+-   `.mapTo<ValueType>()`: A map where the field type is the key and `ValueType` is the value type. For example, `field<String>().mapTo<int>()` is a `Map<String, int>`.
+-   `.withMapper(mapper)`: Maps the raw database value into one more useful for the application. For example, mapping an enum index to the enum value itself.
+-   `.withOptions(options)`: Limits the available options for the property. This will run as a validation when the ValueObject is instantiated and before it is serialized, and will then render the field as a dropdown in the generated Port instead of a text-field.
+
+## Entities
+
+`Entity`s are the fundamental units of data storage and manipulation. They encapsulate `ValueObject`s along with a unique identifier, providing a way to uniquely represent and manage data records. Entities are mutable, allowing their values to change over time, and they can define lifecycle methods such as `onBeforeSave` and `onAfterDelete` to customize their behavior.
+
+Here's an example of an `Entity`:
+
+```dart
+class UserEntity extends Entity<User> {}
+```

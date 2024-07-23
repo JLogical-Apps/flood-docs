@@ -10,6 +10,7 @@
   "style": "Style",
   "port": "Port",
   "drop": "Drop",
+  "asset": "Asset",
   "environment": "Environment",
   "automate": "Automate",
   "auth": "Auth",
@@ -22,6 +23,7 @@
   },
   "path": "Path",
   "logs": "Logs",
+  "share": "Share",
   "url-bar": "Url Bar",
   "testing": "Testing",
   "environment-banner": "Environment Banner",
@@ -35,8 +37,11 @@
   "firebase": "Firebase",
   "appwrite": "Appwrite (Coming Soon)",
   "supabase": "Supabase (Coming Soon)",
-  "-resources": {
+  "---release-notes": {
     "type": "separator"
+  },
+  "release-notes": {
+    "title": "Release Notes"
   },
   "access-flood": {
     "title": "Access Flood",

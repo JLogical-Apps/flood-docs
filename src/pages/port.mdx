@@ -121,6 +121,7 @@ The auto-generated UI considers the different `PortField` types, their modifiers
 
 -   `PortField.string()` is rendered as a text input field.
 -   `PortField.int()` is rendered as a text input field with int validation.
+-   `PortField.double()` is rendered as a text input field with double validation.
 -   `PortField.bool()` is rendered as a checkbox.
 -   `PortField.dateTime()` is rendered as a date picker.
 -   `PortField.option()` is rendered as a dropdown.
@@ -135,7 +136,7 @@ The auto-generated UI also takes into account the modifiers applied to the field
 -   `.multiline()` sets a text field as multiline.
 -   `.isName()` sets the TextInputType to `TextInputType.name`.
 -   `.isEmail()` sets the TextInputType to `TextInputType.email`.
--   `.isPhone()` sets the TextInputType to `TextInputType.phoneNumber`.
+-   `.isPhone()` sets the TextInputType to `TextInputType.phoneNumber` and adds an input formatter for phone numbers.
 -   `.isSecret()` masks the input as a password field.
 -   `.multiline()` renders a multiline text input field.
 -   `.withAllowedFileTypes()` sets the file picker to choose only files with the given file extensions.
@@ -149,7 +150,7 @@ The auto-generated UI aims to provide a functional and visually appealing form l
 You can render a `Port` in various ways:
 
 -   As a [StyledDialog](/style/dialog): Use `context.showDialog(StyledPortDialog(port: port))` to display the form fields in a dialog window. You can override the `onAccept` callback to customize the behavior when the user submits the form.
--   As a widget: Use `StyledObjectPortBuilder(port: port)` to render the form fields as a widget within your application.
+-   As a widget: Use `StyledObjectPortBuilder(port: port)` to render the form fields as a widget within your application. Use `only` to render only certain fields, and `order` to customize the order the fields will be rendered in.
 
 Here's an example of how to automatically render a port:
 

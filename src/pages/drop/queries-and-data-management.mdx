@@ -1,0 +1,49 @@
+# Queries and Data Management
+
+## Queries
+
+Drop provides a powerful querying mechanism to retrieve data from repositories efficiently. Here are some examples of building queries:
+
+```dart
+// Fetches the first UserEntity whose email is 'test@test.com' or `null` if not found.
+Query.from<UserEntity>().where('email').isEqualTo('test@test.com').firstOrNull();
+
+// Fetches the first 20 UserEntities by their name in descending order.
+Query.from<UserEntity>().orderByDescending('name').limit(20).all();
+
+// Fetches a paginated list of UserEntities whose names are not null.
+Query.from<UserEntity>().where('name').isNotNull().paginate();
+
+// Fetches all UserEntities and maps the resulting UserEntities by their name.
+Query.from<UserEntity>().all().map((userEntities) => userEntities.map((userEntity) => userEntity.value.nameProperty.value).toList());
+
+// Fetches UserEntities whose role is either 'admin' or 'moderator'.
+Query.from<UserEntity>().where('role').isIn(['admin', 'moderator']).all();
+
+// Fetches UserEntities who have at least one of the specified skills.
+Query.from<UserEntity>().where('skills').containsAny(['Flutter', 'Dart', 'Firebase']).all();
+
+// Fetches UserEntities whose status is not 'inactive'.
+Query.from<UserEntity>().where('status').notEqualTo('inactive').all();
+
+// Counts the number of UserEntities with a 'premium' subscription.
+Query.from<UserEntity>().where('subscription').isEqualTo('premium').count();
+```
+
+## Making Updates
+
+Drop provides methods to update and delete `Entity`s in a `Repository`. Here's an example of updating an Entity:
+
+```dart
+// This modifies the userEntity's ValueObject by updating its name and email property, then saves it to the repository.
+context.updateEntity(
+    userEntity,
+    (User user) => user..nameProperty.set('John')..emailProperty.set('john@doe.com'),
+);
+```
+
+And here's an example of deleting an Entity:
+
+```dart
+context.delete(userEntity);
+```

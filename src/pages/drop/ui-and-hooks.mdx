@@ -1,0 +1,145 @@
+# Auto-generated UI and Hooks
+
+## Auto-generated UI
+
+Drop integrates with the [Port Module](/port) to automatically generate UI for ValueObjects.
+
+### Generate a Port from a ValueObject
+
+You can generate a Port from a ValueObject using the following code:
+
+```dart
+final user = User()..nameProperty.set('John Doe')..emailProperty.set('johndoe@example.com');
+final port = user.asPort(context.corePondContext);
+// Perform some modifications to the port
+final result = await port.submit(); // Validation would occur here based on the validation rules of the User ValueObject.
+result.data; // a new `User` object with modified properties based on the values from the port.
+```
+
+### Overriding
+
+You can customize the generated Port by providing overrides:
+
+```dart
+final port = user.asPort(context.corePondContext, overrides: [
+    PortGeneratorOverride.remove('name'), // Removes the 'name' field from the port.
+    PortGeneratorOverride.override('email', PortField.string().isEmail().isNotBlank()), // Overrides the 'email' PortField with a custom implementation.
+    PortGeneratorOverride.update('email', (portField) => portField.withDisplayName('Your Email').withHint('john@example.com')), // Instead of completely overriding the PortField, you can compose additional functionality on top of the auto-generated PortField.
+]);
+```
+
+### Using the Auto-generated UI
+
+You can use the auto-generated UI within a `StyledDialog` or `StyledObjectPortBuilder`:
+
+```dart
+context.showStyledDialog(StyledPortDialog(
+  port: user.asPort(context.corePondContext),
+  onAccept: (User newUser) {
+    // Once the user "Saves" the updated `User`, handle the change here.
+  },
+));
+```
+
+or
+
+```dart
+StyledObjectPortBuilder(
+  port: user.asPort(context.corePondContext),
+);
+```
+
+The auto-generated UI will automatically fill in initial values based on the passed-in ValueObject, modify the fields to add validators, fallbacks, multiline, date-pickers, color-pickers, etc. The return value from the Port is a reconstructed ValueObject with the values from the UI fields, so you don't have to manually reconstruct everything yourself!
+
+Check out Port's [Auto-generated UI](/port#auto-generated-ui) section to learn about how the UI gets automatically generated.
+
+### Reference Fields
+
+Reference fields in ValueObjects provide enhanced functionality when generating Ports. When editing Ports of ValueObjects containing reference fields, a dropdown field will appear, allowing users to select from available entities.
+
+Here's an example of a reference field with advanced configuration:
+
+```dart
+static const trayField = 'tray';
+late final trayProperty = reference<TrayEntity>(
+    name: trayField,
+    searchQueryGetter: (context) => Query.from<TrayEntity>()
+        .where(Tray.ownerField)
+        .isEqualTo(context.context.authCoreComponent.loggedInUserId)
+        .orderByAscending(Tray.nameField),
+    searchResultsFilter: (context, trayEntities) async {
+      if (await _isLocked(context)) {
+        return trayEntities.where((trayEntity) => trayEntity.value.public.value).toList();
+      }
+      return trayEntities;
+    }).withDisplayName('Tray');
+```
+
+In this example:
+
+-   `searchQueryGetter`: Overrides the default Query used to fetch available entities. It allows you to customize the search criteria, such as filtering by the logged-in user and ordering the results.
+-   `searchResultsFilter`: Provides an asynchronous predicate to further filter the query results. In this case, it checks if the user is locked and, if so, only displays public trays.
+
+When this ValueObject is used to generate a Port, the UI will display a dropdown field for the 'tray' property. The dropdown will be populated with TrayEntity options based on the custom query and filter logic defined in the reference field.
+
+This feature allows for more dynamic and context-aware selection of referenced entities in your application's forms and UI components.
+
+#### Customizing Search Result Display
+
+You can customize how entities are displayed in the search field by implementing the `IsStyledSearchResultOverride` mixin. This allows you to create a custom widget for each search result.
+
+Here's an example of how to create a custom display for `TrayEntity`:
+
+```dart filename="example/lib/port/tray_styled_search_result_override.dart"
+class TrayStyledResultOverride with IsStyledSearchResultOverride<TrayEntity> {
+  @override
+  Widget build(TrayEntity result) {
+    return Padding(
+      padding: EdgeInsets.all(2),
+      child: StyledText.body.withColor(Color(result.value.colorProperty.value))(result.value.nameProperty.value),
+    );
+  }
+}
+```
+
+In this example, each `TrayEntity` in the search results will be displayed with its name in the color specified by its `colorProperty`.
+
+To use this custom display, you need to register it in your `FloodAppComponent`
+
+```dart filename="example/lib/main.dart"
+await appPondContext.register(FloodAppComponent(
+  // ... other configurations ...
+  styledSearchResultOverrides: [
+    TrayStyledResultOverride(),
+  ],
+));
+```
+
+By registering the `TrayStyledResultOverride`, you ensure that all reference fields pointing to `TrayEntity` will use this custom display in their search results.
+
+## Hooks
+
+Drop provides hooks like `useQuery` and `useEntity` to simplify data retrieval and binding in your Flutter widgets. These hooks not only fetch the initial data but also automatically update whenever the corresponding entities are modified using the [Model Module](/model).
+
+```dart
+final userEntitiesModel = useQuery(Query.from<UserEntity>());
+final userEntityModel = useEntity<UserEntity>('userId');
+
+return ModelBuilder(
+  model: userEntitiesModel,
+  builder: (List<UserEntity> userEntities) { // Once the query has loaded or if the values ever update, run the `builder`.
+    ...
+  }
+);
+```
+
+When you use `useQuery`, it will initially fetch the data based on the specified query. If any entities matching that query are updated, the hook will automatically re-fetch the data and update the widget that uses the hook. This eliminates the need for manual state management and ensures that your UI always reflects the latest data.
+
+Similarly, `useEntity` will fetch a specific entity based on its ID. If that entity is updated, the hook will automatically update the widget with the latest entity data.
+
+In addition to these hooks, Drop provides more advanced hooks:
+
+-   `useSingleton(Query)`: Runs a query and returns the first result from the query. If no entity matches, then it creates a new Entity and returns it. Use `entityUpdater` to modify the created Entity.
+-   `useFutureQuery(FutureOr<QueryRequest<E, T>> Function() queryGetter)`: Provide an asynchronous QueryRequest, and this hook will take care of listening to the future, and then listening to the resulting QueryRequest.
+
+By leveraging these hooks, you can greatly simplify your code and reduce the need for explicit state management. Drop takes care of keeping your data in sync with your UI, making it easier to build reactive and data-driven applications.

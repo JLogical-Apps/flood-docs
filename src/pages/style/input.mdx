@@ -28,6 +28,17 @@ StyledReadonlyTextField(
 ),
 ```
 
+## StyledDisabledTextField
+
+`StyledDisabledTextField` is a disabled variant of `StyledTextField` that displays a non-editable text value, while also making it obvious to users that its value cannot be edited. It is useful for presenting information that should not be modified by the user. The component supports properties like `labelText`, `text`, and `errorText` to customize its appearance and convey any error states.
+
+```dart
+StyledDisabledTextField(
+  labelText: 'Disabled',
+  text: 'This value cannot be changed manually.',
+),
+```
+
 ## StyledCheckbox
 
 `StyledCheckbox` is a checkbox component that allows users to toggle a boolean value. It provides a `value` property to define the current state and an `onChanged` callback to handle changes. The `labelText` property can be used to associate a label with the checkbox.
@@ -57,7 +68,7 @@ StyledList.row.centered(
 StyledDateTimeField(
   labelText: 'Date Field',
   value: DateTime.now(),
-  onChanged: (newText) {},
+  onChanged: (newValue) {},
 ),
 ```
 
@@ -74,7 +85,7 @@ StyledOptionField(
     'Option 2',
     'Option 3',
   ],
-  onChanged: (newText) {},
+  onChanged: (newValue) {},
 ),
 ```
 
@@ -129,7 +140,7 @@ StyledList.row.centered(
 StyledDateTimeField(
   labelText: 'Date Field',
   value: DateTime.now(),
-  onChanged: (newText) {},
+  onChanged: (newValue) {},
 ),
 StyledOptionField(
   labelText: 'Options',
@@ -139,7 +150,7 @@ StyledOptionField(
     'Option 2',
     'Option 3',
   ],
-  onChanged: (newText) {},
+  onChanged: (newValue) {},
 ),
 StyledList.row.centered(
   children: [

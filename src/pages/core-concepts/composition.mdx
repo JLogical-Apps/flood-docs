@@ -10,7 +10,7 @@ In the context of Flood, composition is applied at various levels, from the arch
 
 ## Composition In Action
 
-One of the key areas where composition shines in Flood is in the design of [ValueObjects](/drop#valueobjects). Instead of defining complex objects with deep inheritance hierarchies for each property, Flood takes a compositional approach.
+One of the key areas where composition shines in Flood is in the design of [ValueObjects](/drop/value-objects-and-entities#valueobjects). Instead of defining complex objects with deep inheritance hierarchies for each property, Flood takes a compositional approach.
 
 The foundation of a ValueObject in Flood is a simple "Property" class. This class represents a basic building block that can be composed with additional functionality to create more specialized properties. By combining a "Property" with other components, such as display name, validation rules, multiline support, fallback values, and more, we can create rich and expressive ValueObjects that precisely match our application's requirements.
 
@@ -43,7 +43,7 @@ class Todo extends ValueObject {
 }
 ```
 
-Some other examples of composition approaches can be seen in [Repositories](/drop#repositories), [PortFields](/port#fields), and [AppPageWrappers](/pond/app/app-pages#app-page-wrapper).
+Some other examples of composition approaches can be seen in [Repositories](/drop/repositories-and-security#repositories), [PortFields](/port#fields), and [AppPageWrappers](/pond/app/app-pages#app-page-wrapper).
 
 This compositional approach offers several benefits:
 

@@ -82,7 +82,7 @@ To use Firebase Authentication in your Flood project, add the `FirebaseAuthServi
 
 ```dart filename="example_core/lib/pond.dart"
 FloodCoreComponent(
-  authServiceImplementations: [
+  authServiceImplementations: (corePondContext) => [
     FirebaseAuthServiceImplementation(),
   ],
 )
@@ -98,9 +98,9 @@ Flood seamlessly integrates with [Firestore](https://firebase.google.com/docs/fi
 
 To use Firestore as the implementation for your repositories in cloud environments, add the `FirebaseCloudRepositoryImplementation` as one of the `repositoryImplementations` in the `FloodCoreComponent`:
 
-```dart
+```dart filename="example_core/lib/pond.dart"
 FloodCoreComponent(
-  repositoryImplementations: [
+  repositoryImplementations: (corePondContext) => [
     FirebaseCloudRepositoryImplementation(),
   ],
 )
@@ -121,6 +121,36 @@ dart tool/automate.dart deploy production
 This command will analyze your Drop repository security rules, generate the corresponding Firestore security rules, and deploy them to your Firebase project associated with the "production" environment.
 
 The generated security rules will be based on the access control and validation logic defined in your Drop repositories, ensuring that your Firestore data is properly secured and follows the specified rules.
+
+## Firebase Storage
+
+Flood's [Asset Module](/asset) seamlessly integrates with Firebase Storage when using the `cloud` or `adapting` asset providers in cloud environments. This integration allows you to easily store and manage assets like images, videos, and other files in your Firebase project.
+
+### Usage
+
+To use Firestore as the implementation for your repositories in cloud environments, add the `FirebaseCloudRepositoryImplementation` as one of the `repositoryImplementations` in the `FloodCoreComponent`:
+
+```dart filename="example_core/lib/pond.dart"
+FloodCoreComponent(
+  assetProviderImplementations: (corePondContext) => [FirebaseStorageAssetProviderImplementation()],
+)
+```
+
+This will configure Firebase Storage as the implementation for the `AssetProvider.cloud()` method, enabling Firebase Storage as the data storage solution in cloud environments.
+
+### Automatic Firebase Storage Security Rules Generation and Deployment
+
+Flood's [Automate Module](/automate) provides a convenient way to automatically generate Firebase Storage security rules based on your [AssetProviders](/asset#creating-an-assetprovider) and deploy them directly to your Firebase project using the [Ops Module](/automate/ops).
+
+To generate and deploy Firebase Storage security rules, run the following command:
+
+```
+dart tool/automate.dart deploy production
+```
+
+This command will analyze your AssetProvider security rules, generate the corresponding Firebase Storage security rules, and deploy them to your Firebase project associated with the "production" environment.
+
+The generated security rules will be based on the access control and validation logic defined in your AssetProviders, ensuring that your Firebase Storage data is properly secured and follows the specified rules.
 
 ## Firebase Crashlytics
 

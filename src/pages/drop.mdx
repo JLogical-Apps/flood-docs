@@ -2,171 +2,29 @@
 
 The Drop Module in the Flood framework aims to provide a consistent way to model data, query and update it, and be flexible to change the data source depending on the current environment. It offers a set of tools and components that simplify the process of defining, storing, querying, and updating data entities, making it easier to build robust and scalable applications.
 
-## ValueObjects
+## Key Concepts
 
-`ValueObject`s define the structure and format of the data associated with an `Entity`. They are immutable and consist of a set of behaviors that specify validation rules, fallback values, and other data-related constraints. Here's an example of defining a `ValueObject`:
+Drop introduces several key concepts that work together to provide a comprehensive data management solution:
 
-```dart filename="example_core/lib/features/user/user.dart"
-class User extends ValueObject {
-  late final nameProperty = field<String>(name: 'name').withFallback(() => 'John');
-  late final emailProperty = field<String>(name: 'email').isNotBlank();
-  late final notesProperty = field<String>(name: 'notes');
-  late final itemsProperty = field<String>(name: 'items').list();
+1. **[ValueObjects](/drop/value-objects-and-entities#valueobjects)**: Define the structure and format of your data, including validation rules and constraints.
 
-  @override
-  late final List<ValueObjectBehavior> behaviors = [
-    nameProperty,
-    emailProperty,
-    notesProperty,
-    itemsProperty,
-    creationTime(),
-  ];
-}
+2. **[Entities](/drop/value-objects-and-entities#entities)**: Represent the fundamental units of data storage, encapsulating ValueObjects with a unique identifier.
 
-```
+3. **[Repositories](/drop/repositories-and-security#repositories)**: Determine where and how Entities are stored, with flexible options for different environments.
 
-`ValueObject`s can have different behaviors and modifiers to customize their properties:
+4. **[Queries](/drop/queries-and-data-management#queries)**: Provide a powerful mechanism to retrieve and filter data from repositories.
 
--   `field<T>()`: A simple behavior that stores a value of type `T`.
--   `reference<EntityType>()`: A field that stores a String but indicates it references an `EntityType`.
--   `computed()`: Computes a value to store in the repository.
+5. **[Security](/drop/repositories-and-security#security)**: Offer granular control over data access and operations.
 
-Modifiers for behaviors include:
+6. **[Auto-generated UI](/drop/ui-and-hooks#auto-generated-ui)**: Integrate with the [Port Module](/port) to automatically generate user interfaces based on your data models.
 
--   `.required()`: Cannot be null. Sets the field to be non-nullable.
--   `.isNotBlank()`: Cannot be null or blank. Sets the field to be non-nullable.
--   `.withFallback()`: If null, uses a fallback. Sets the field to be non-nullable.
--   `.withValidator()`: Adds a `Validator` to the field.
--   `.isEmail()`: Indicates the field must be an email.
--   `.time()`: Parses Strings from the repository into `Timestamp` to be used in the code.
--   `.embedded()`: Required for `field<ValueObjectType>()` so that it can extract data to the `ValueObjectType`.
--   `.list()`: A list of the field type. For example, `field<String>().list()` is a `List<String>`.
--   `.mapTo<ValueType>()`: A map where the field type is the key and `ValueType` is the value type. For example, `field<String>().mapTo<int>()` is a `Map<String, int>`.
-
-## Entities
-
-`Entity`s are the fundamental units of data storage and manipulation. They encapsulate `ValueObject`s along with a unique identifier, providing a way to uniquely represent and manage data records. Entities are mutable, allowing their values to change over time, and they can define lifecycle methods such as `onBeforeSave` and `onAfterDelete` to customize their behavior.
-
-Here's an example of an `Entity`:
-
-```dart
-class UserEntity extends Entity<User> {}
-```
-
-## Repositories
-
-`Repository`s in Drop define where and how `Entity`s are stored. They provide a flexible and adaptable storage mechanism that can be tailored to your application's needs. Here's an example of defining a `Repository`:
-
-```dart
-class UserRepository with IsRepositoryWrapper {
-  @override
-  late Repository repository = Repository.forType<UserEntity, User>( // Specify the Entity and ValueObject this Repository handles.
-    UserEntity.new,
-    User.new,
-    entityTypeName: 'UserEntity',
-    valueObjectTypeName: 'User',
-  )
-    .adapting('user') // Specifies the path where to save users.
-    .withSecurity(RepositorySecurity(
-        read: Permission.all, // Anyone can read a user.
-        create: Permission.admin, // Only admins can create users.
-        update: Permission.authenticated, // Only authenticated users can update users.
-        delete: Permission.none, // No one can delete users.
-      ));
-}
-```
-
-`Repository`s have different modifiers to customize their behavior:
-
--   `.file(path)`: A `Repository` to the device file system at `path`.
--   `.cloud(path)`: A `Repository` to a cloud provider at `path`.
--   `.adapting(path)`: A `Repository` that adapts on the implementation based on the [environment](/environment).
--   `.withSecurity(security)`: Ensures the user has permission to do actions. Otherwise throws an exception.
--   `.withMemoryCache()`: Stores a cache of loaded `Entities` to use before executing a `Query` on the source `Repository`.
-
-These modifiers allow you to configure repositories to adapt to different environments, add security rules, and optimize performance with caching.
-
-### Security
-
-`Repository`s in Drop offer robust security features to control access to data. You can define granular permission levels for read, create, update, and delete operations, ensuring that only authorized users can perform specific actions on the data. The security rules are enforced locally, and can then be accessed and analyzed by Integrations, such as [Firebase](/firebase#automatic-firestore-security-rules-generation-and-deployment), to deploy security rules to the backend.
-
-#### Permission Types
-
-Drop provides several types of permissions to control access to repositories:
-
-1. **`Permission.all`**: Allows access to all users, regardless of their authentication status.
-2. **`Permission.none`**: Blocks access to all users, effectively disabling the corresponding operation.
-3. **`Permission.authenticated`**: Allows access only to authenticated users.
-4. **`Permission.admin`**: Allows access only to users with admin privileges.
-5. **`Permission.equals`**: Allows access based on the equality of two fields, such as comparing the `id` of the entity with the `loggedInUserId`.
-
-### Enforcing Security with `withSecurity`
-
-The `withSecurity()` modifier on a repository allows you to enforce security rules. When applied, the repository will check the specified permissions before allowing any operation to proceed.
-
-Here's an example of applying security rules to a repository:
-
-```dart filename="example_core/lib/features/todo/todo_repository.dart"
-class TodoRepository with IsRepositoryWrapper {
-  @override
-  late Repository repository = Repository.forType<TodoEntity, Todo>(...).adapting('todo')
-    .withSecurity(RepositorySecurity.all(
-        Permission.admin |
-            Permission.equals(PermissionField.propertyName(Todo.userField), PermissionField.loggedInUserId),
-      ));
-}
-
-```
-
-In this example, the `TodoRepository` is configured to allow access only when the `user` field matches the `loggedInUserId` from the [Auth Module](/auth), effectively restricting users to access or modify only their own todos.
-
-#### Read Permissions and Query Modification
-
-When read permissions are set on a repository, any queries executed on that repository are automatically modified to limit the records that can be fetched based on the specified permissions.
-
-For example, consider the `TodoRepository` above. If you were to run `Query.from<TodoEntity>().all()`, the query gets automatically modified like so:
-
-1. If you are an admin user, the query does not get modified because `Permission.admin` is passed.
-2. If you are not an admin user, the query is modified to include an additional `.where('user').isEqualTo(loggedInUserId)` behind the scenes, ensuring that the Flutter application does not attempt to read `TodoEntity`s it does not have access to.
-
-#### Bypassing local security
-
-`.withSecurity` will automatically enforce both query-modification and write permissions locally before it reaches the source database. If you would like to bypass the local security checks for administration or testing purposes, use `context.dropCoreComponent.runWithoutSecurity()`.
-
-## Making Updates
-
-Drop provides methods to update and delete `Entity`s in a `Repository`. Here's an example of updating an Entity:
-
-```dart
-// This modifies the userEntity's ValueObject by updating its name and email property, then saves it to the repository.
-context.updateEntity(
-    userEntity,
-    (User user) => user..nameProperty.set('John')..emailProperty.set('john@doe.com'),
-);
-```
-
-And here's an example of deleting an Entity:
-
-```dart
-context.delete(userEntity);
-```
-
-## Queries
-
-Drop provides a powerful querying mechanism to retrieve data from repositories efficiently. Here are some examples of building queries:
-
-```dart
-Query.from<UserEntity>().where('email').isEqualTo('test@test.com').firstOrNull(); // Fetches the first UserEntities whose email is 'test@test.com' or `null` if not found.
-Query.from<UserEntity>().orderByDescending('name').limit(20).all(); // Fetches the first 20 UserEntities by their name in descending order.
-Query.from<UserEntity>().where('name').isNotNull().paginate(); // Fetches a paginated list of UserEntities whose names are not null.
-Query.from<UserEntity>().all().map((userEntities) => userEnitites.map((userEntity) => userEntity.value.nameProperty.value).toList()); // Fetches all UserEntities and maps the resulting UserEntities by their name.
-```
+7. **[Hooks](ui-and-hooks#hooks)**: Simplify data retrieval and binding in Flutter widgets, with automatic updates when data changes.
 
 ## Implementations
 
-Drop supports various repository implementations, including file-based storage, cloud-based storage, and environment-specific storage. However, `.file` and `.cloud` modifiers on their own do not provide any implementation details. They require `repositoryImplementations` to be passed into `FloodCoreComponent` to specify the exact implementation of the repositories to use in those environments.
+Drop supports various repository implementations, including file-based storage, cloud-based storage, and [environment](/environment)-specific storage. However, the `.cloud` modifier on its own does not provide any implementation details. It requires `repositoryImplementations` to be passed into `FloodCoreComponent` to specify the exact implementation of the repositories to use in those environments.
 
-For example, if you pass in `FirebaseCloudRepositoryImplementation` as one of the `repositoryImplementations`, it will make any `.cloud` repositories (or any `.adapting` repositories in a cloud environment) use the Firebase implementation. Similarly, you can provide implementations for other environments or storage mechanisms.
+For example, if you pass in [`FirebaseCloudRepositoryImplementation`](/firebase#usage-2) as one of the `repositoryImplementations`, it will make any `.cloud` repositories (or any `.adapting` repositories in a cloud environment) use the Firebase implementation. Similarly, you can provide implementations for other environments or storage mechanisms.
 
 Here's an example of passing repository implementations to `FloodCoreComponent`:
 
@@ -179,81 +37,6 @@ await corePondContext.register(FloodCoreComponent(
 ```
 
 By providing the appropriate repository implementations, you can easily switch between different storage mechanisms based on the environment or your application's requirements.
-
-## Auto-generated UI
-
-Drop integrates with the [Port Module](/port) to automatically generate UI for ValueObjects.
-
-### Generate a Port from a ValueObject
-
-You can generate a Port from a ValueObject using the following code:
-
-```dart
-final user = User()..nameProperty.set('John Doe')..emailProperty.set('johndoe@example.com');
-final port = user.asPort(context.corePondContext);
-// Perform some modifications to the port
-final result = await port.submit(); // Validation would occur here based on the validation rules of the User ValueObject.
-result.data; // a new `User` object with modified properties based on the values from the port.
-```
-
-### Overriding
-
-You can customize the generated Port by providing overrides:
-
-```dart
-final port = user.asPort(context.corePondContext, overrides: [
-    PortGeneratorOverride.remove('name'), // Removes the 'name' field from the port.
-    PortGeneratorOverride.override('email', PortField.string().isEmail().isNotBlank()), // Overrides the 'email' PortField with a custom implementation.
-    PortGeneratorOverride.update('email', (portField) => portField.withDisplayName('Your Email').withHint('john@example.com')), // Instead of completely overriding the PortField, you can compose additional functionality on top of the auto-generated PortField.
-]);
-```
-
-### Using the Auto-generated UI
-
-You can use the auto-generated UI within a `StyledDialog` or `StyledObjectPortBuilder`:
-
-```dart
-context.showStyledDialog(StyledPortDialog(
-  port: user.asPort(context.corePondContext),
-  onAccept: (User newUser) {
-    // Once the user "Saves" the updated `User`, handle the change here.
-  },
-));
-```
-
-or
-
-```dart
-StyledObjectPortBuilder(
-  port: user.asPort(context.corePondContext),
-);
-```
-
-The auto-generated UI will automatically fill in initial values based on the passed-in ValueObject, modify the fields to add validators, fallbacks, multiline, date-pickers, color-pickers, etc. The return value from the Port is a reconstructed ValueObject with the values from the UI fields, so you don't have to manually reconstruct everything yourself!
-
-Check out Port's [Auto-generated UI](/port#auto-generated-ui) section to learn about how the UI gets automatically generated.
-
-## Hooks
-
-Drop provides hooks like `useQuery` and `useEntity` to simplify data retrieval and binding in your Flutter widgets. These hooks not only fetch the initial data but also automatically update whenever the corresponding entities are modified using the [Model Module](/model).
-
-```dart
-final userEntitiesModel = useQuery(Query.from<UserEntity>());
-final userEntityModel = useEntity<UserEntity>('userId');
-
-return ModelBuilder(
-  model: userEntitiesModel,
-  builder: (List<UserEntity> userEntities) { // Once the query has loaded or if the values ever update, run the `builder`.
-    ...
-  }
-);
-```
-
-When you use `useQuery`, it will initially fetch the data based on the specified query. If any entities matching that query are updated, the hook will automatically re-fetch the data and update the widget that uses the hook. This eliminates the need for manual state management and ensures that your UI always reflects the latest data.
-
-Similarly, `useEntity` will fetch a specific entity based on its ID. If that entity is updated, the hook will automatically update the widget with the latest entity data.
-
-By leveraging these hooks, you can greatly simplify your code and reduce the need for explicit state management. Drop takes care of keeping your data in sync with your UI, making it easier to build reactive and data-driven applications.
 
 ## Use with Pond
 

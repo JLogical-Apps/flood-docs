@@ -1,0 +1,159 @@
+# Asset Module
+
+The Asset Module in Flood provides a powerful and flexible way to manage assets (such as images, files, etc.) across different environments. It allows for easy saving, retrieving, securing, selecting, and synchronizing assets.
+
+## Overview
+
+The Asset Module in Flood provides a flexible system for managing assets across different environments and network conditions. It offers several types of asset providers to suit various use cases:
+
+1. `memory`: Stores assets in memory. This is useful for temporary storage or testing scenarios.
+
+2. `file`: Uses the device's file system to store assets. This provides persistent storage on the device.
+
+3. `cloud`: Utilizes the cloud provider's asset storage service. This is ideal for production environments where assets need to be accessible across multiple devices.
+
+4. `adapting`: Automatically selects the appropriate storage method based on the current [environment](/environment). In the `testing` environment, it will use `memory`. In the `device` environment, it will use `file`. Otherwise, it will use `cloud`.
+
+5. `syncing`: Implements an offline-first caching strategy. This provider:
+
+    - Caches assets locally when the device is online.
+    - Uses cached assets when the device is offline.
+    - Queues asset updates made while offline.
+    - Synchronizes queued updates with the cloud when the device regains internet access.
+
+The `syncing` provider is particularly useful for applications that need to function seamlessly in both online and offline scenarios, ensuring a smooth user experience regardless of network connectivity.
+
+By leveraging these different asset providers, you can create a robust asset management system that adapts to various environments and network conditions, providing flexibility and reliability in your Flood applications.
+
+## Setting Up Asset Providers
+
+To use the Asset Module, you need to register `AssetProvider`s when setting up your `FloodCoreComponent`:
+
+```dart filename="example_core/lib/pond.dart"
+await corePondContext.register(FloodCoreComponent(
+  // ... other configurations
+  assetProviders: (context) => [
+    TodoAssetProvider(context),
+    UserProfilePictureAssetProvider(context),
+    UserTokenAssetProvider(context),
+  ],
+));
+```
+
+## Creating an AssetProvider
+
+Here's an example of how to create an `AssetProvider` for user profile pictures:
+
+```dart filename="example_core/lib/features/user/user.dart"
+class UserProfilePictureAssetProvider with IsAssetProviderWrapper {
+  final AssetCoreComponent context;
+
+  UserProfilePictureAssetProvider(this.context);
+
+  @override
+  late final AssetProvider assetProvider = AssetProvider.static
+      .adapting(context, (context) => 'users/${context.entityId}/profilePicture')
+      .fromRepository<UserEntity>(context);
+}
+```
+
+This `AssetProvider`:
+
+-   Adapts to the current environment.
+-   Saves and retrieves user profile pictures to `users/{entityId}/profilePictures`.
+-   Uses the security rules from the `UserRepository`.
+
+## Using Assets in ValueObjects
+
+You can use assets in your [ValueObjects](/drop/value-objects-and-entities#valueobjects) by using the asset field type:
+
+```dart filename="example_core/lib/features/user/user.dart"
+class User extends ValueObject {
+  static const profilePictureField = 'profilePicture';
+  late final profilePictureProperty = field<String>(name: profilePictureField)
+      .asset(
+        assetProvider: (context) => context.locate<UserProfilePictureAssetProvider>(),
+        allowedFileTypes: AllowedFileTypes.image,
+      )
+      .withDisplayName('Profile Picture');
+
+  @override
+  late final List<ValueObjectBehavior> behaviors = [
+    profilePictureProperty,
+  ];
+}
+```
+
+This setup:
+
+-   Converts a String field into an asset field.
+-   Specifies which `AssetProvider` to use.
+-   Defines allowed file types (in this case, only images).
+
+### Asset Lifecycle Management
+
+1. **Deletion**: When a ValueObject containing an asset, asset list, or embedded ValueObjects with assets is deleted, Drop automatically deletes the corresponding assets from the specified AssetProvider.
+
+2. **Modification**: If an asset field is modified (e.g., a new asset is uploaded or an existing asset is replaced), Drop handles the upload of the new asset and deletion of the old one if necessary.
+
+3. **Cascading Deletions**: For embedded ValueObjects or lists of assets, Drop ensures that all associated assets are properly deleted when the parent ValueObject is removed.
+
+This automatic asset management ensures that your application maintains data integrity and prevents orphaned assets in your storage system.
+
+## Rendering Assets in UI
+
+To display an asset in your UI, you can use the `StyledAssetProperty` widget:
+
+```dart
+Container(
+    child: user.profilePictureProperty.value != null
+        ? StyledAssetProperty(
+            assetProperty: user.profilePictureProperty.value!,
+            width: 35,
+            height: 35,
+            fit: BoxFit.cover,
+          )
+        : Padding(
+            padding: EdgeInsets.all(5),
+            child: StyledIcon(
+              Icons.person,
+              size: 25,
+            ),
+          ),
+),
+```
+
+This code checks if a user has a profile picture and renders it if available, otherwise displaying a generic profile icon.
+
+## Asset Security
+
+The Asset Module provides robust security features:
+
+-   You can define custom security rules, such as:
+
+-   Allowing only authenticated users to access assets.
+-   Restricting access based on user roles (e.g., admin access).
+-   Limiting access to assets based on user IDs or other entity properties.
+
+-   You can inherit security rules from Drop [Repositories](/drop/repositories-and-security#repositories), making it easy to align asset access with entity access rules.
+
+Here's an example of setting up asset security manually:
+
+```dart
+AssetProvider.static
+      .adapting(context, (context) => 'users/${context.entityId}/profilePicture')
+      .withSecurity(
+          AssetSecurity(
+            read: AssetPermission.authenticated,
+            create: AssetPermission.equals(AssetPermissionField.loggedInUserId, AssetPermissionField.entityId),
+            update: AssetPermission.equals(AssetPermissionField.loggedInUserId, AssetPermissionField.entityId),
+            delete: AssetPermission.admin &
+                AssetPermission.equals(AssetPermissionField.loggedInUserId, AssetPermissionField.entityId),
+          ));
+```
+
+This security configuration:
+
+-   Allows any authenticated user to read the asset.
+-   Allows creation and updating only if the logged-in user ID matches the entity ID.
+-   Allows deletion only for admin users whose ID matches the entity ID.

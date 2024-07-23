@@ -1,0 +1,43 @@
+# Share
+
+The Share Module provides an easy way to share text or files across different platforms. It's automatically included in the `FloodAppComponent`.
+
+## Usage
+
+Access the Share module using `BuildContext.shareAppComponent`.
+
+### Sharing Text
+
+Use `shareText` to share text content:
+
+```dart
+await context.shareAppComponent.shareText(
+  context,
+  text: 'Hello, World!',
+);
+```
+
+-   Mobile: Opens the native share sheet
+-   Web: Copies the text to the clipboard
+
+### Sharing Files
+
+Use `shareFile` to share files:
+
+```dart
+await context.shareAppComponent.shareFile(
+  context,
+  fileName: 'report.pdf',
+  fileBytes: pdfBytes,
+  mimeType: 'application/pdf',
+);
+```
+
+-   Mobile: Opens the native share sheet with the file
+-   Web: Triggers a download of the file
+
+Both methods adapt their behavior based on the current platform, providing a seamless sharing experience in mobile and web applications.
+
+## Usage
+
+If you are using the [FloodAppComponent](/pond/app#pre-built-components) in your Flutter application, the Share functionality is already implemented for you.

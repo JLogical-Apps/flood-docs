@@ -4,7 +4,7 @@ The Environment Module in the Flood framework provides a powerful and flexible w
 
 ## Overview
 
-Flood provides a variety of environments you can use to test your app in. Services or [Repositories](/drop#repositories) defined as `adapting` will adapt their implementation based on the current environment. For example, instead of draining Firebase resources when testing your app, simply use the `testing` environment to simulate all repositories and authentication locally.
+Flood provides a variety of environments you can use to test your app in. Services or [Repositories](/drop/repositories-and-security#repositories) defined as `adapting` will adapt their implementation based on the current environment. For example, instead of draining Firebase resources when testing your app, simply use the `testing` environment to simulate all repositories and authentication locally.
 
 -   `testing` simulates all services in-memory. Restarting the app will reset everything. You can use the [TestingAppComponent](/testing) to define test data that will be populated every time you start the app in the `testing` environment.
 -   `device` simulates all services on the device file-system. This saves authentication and repositories into the device file system, so every time you restart the app, it will persist its memory. Use the [Device Files Module](/debug/device-files) to inspect the device's file systems.

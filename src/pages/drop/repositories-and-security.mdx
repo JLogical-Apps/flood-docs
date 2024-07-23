@@ -1,0 +1,159 @@
+# Repositories and Security
+
+## Repositories
+
+`Repository`s in Drop define where and how `Entity`s are stored. They provide a flexible and adaptable storage mechanism that can be tailored to your application's needs. Here's an example of defining a `Repository`:
+
+```dart
+class UserRepository with IsRepositoryWrapper {
+  @override
+  late Repository repository = Repository.forType<UserEntity, User>( // Specify the Entity and ValueObject this Repository handles.
+    UserEntity.new,
+    User.new,
+    entityTypeName: 'UserEntity',
+    valueObjectTypeName: 'User',
+  )
+    .adapting('user') // Specifies the path where to save users.
+    .withSecurity(RepositorySecurity(
+        read: Permission.all, // Anyone can read a user.
+        create: Permission.admin, // Only admins can create users.
+        update: Permission.authenticated, // Only authenticated users can update users.
+        delete: Permission.none, // No one can delete users.
+      ));
+}
+```
+
+`Repository`s have different modifiers to customize their behavior:
+
+-   `.file(path)`: A `Repository` to the device file system at `path`.
+-   `.cloud(path)`: A `Repository` to a cloud provider at `path`.
+-   `.adapting(path)`: A `Repository` that adapts its implementation based on the [environment](/environment).
+-   `.adaptingToDevice(path)`: A `Repository` that will use `testing` if in the testing environment, and `device` otherwise. This is useful for repositories intended to cache data to the device.
+-   `.syncing(path)`: A `Repository` that also adapts based on the current environment. Instead of just using a `cloud` repository, it enables offline-first functionality. This modifier caches query results to the device and uses them when there's no internet connection. It also stores `Entity` updates and deletes locally, syncing them with online repositories when internet access is available.
+-   `.withSecurity(security)`: Ensures the user has permission to do actions. Otherwise throws an exception.
+-   `.withMemoryCache()`: Stores a cache of loaded `Entities` to use before executing a `Query` on the source `Repository`.
+
+These modifiers allow you to configure repositories to adapt to different environments, add security rules, and optimize performance with caching.
+
+### Offline-First with Syncing Repositories
+
+Drop supports offline-first applications through the use of syncing repositories. To create a syncing repository, use the `.syncing(path)` modifier:
+
+```dart
+late Repository repository = Repository.forType<UserEntity, User>(...)
+  .syncing('user');
+```
+
+Syncing repositories offer the following benefits:
+
+-   **Offline Query Results:** Query results are cached on the device and used when there's no internet connection.
+-   **Local Updates:** Entity updates and deletes are stored locally when offline.
+-   **Background Synchronization:** Changes are automatically synced with online repositories when internet access is restored.
+
+To provide users with visibility into the syncing process, you can add a `SyncIndicator` widget to your app. This will show a loading indicator if it is working on sychronizing changes, an error icon if an exception occurred during the sychronization, and a cloud icon when all the changes have been successfully published.
+
+## Security
+
+`Repository`s in Drop offer robust security features to control access to data. You can define granular permission levels for read, create, update, and delete operations, ensuring that only authorized users can perform specific actions on the data. The security rules are enforced locally, and can then be accessed and analyzed by Integrations, such as [Firebase](/firebase#automatic-firestore-security-rules-generation-and-deployment), to deploy security rules to the backend.
+
+### Permission Types
+
+Drop provides several types of permissions to control access to repositories:
+
+1. **`Permission.all`**: Allows access to all users, regardless of their authentication status.
+2. **`Permission.none`**: Blocks access to all users, effectively disabling the corresponding operation.
+3. **`Permission.authenticated`**: Allows access only to authenticated users.
+4. **`Permission.admin`**: Allows access only to users with admin privileges.
+5. **`Permission.equals`**: Allows access based on the equality of two fields.
+
+### PermissionFields
+
+PermissionFields are used in `Permission.equals` to specify what should be compared in security rules. Here are the available PermissionFields:
+
+1. **`PermissionField.entityId`**: Represents the ID of the current entity.
+2. **`PermissionField.loggedInUserId`**: Represents the ID of the currently logged-in user.
+3. **`PermissionField.propertyName(String)`**: Represents a property of the current entity.
+4. **`PermissionField.value(dynamic)`**: Represents a specific value to compare against.
+5. **`PermissionField.entity<EntityType>(PermissionField)`**: Allows accessing properties of referenced entities.
+
+### Combining Permissions
+
+You can combine multiple permission checks using logical operators such as `|` for OR or `&` for AND.
+
+```dart
+RepositorySecurity.all(
+  Permission.admin |
+  Permission.equals(PermissionField.propertyName('owner'), PermissionField.loggedInUserId)
+)
+```
+
+This allows access if the user is an admin OR if they are the owner of the entity.
+
+### Security examples
+
+```dart
+// Allow access if the entity's ID matches the logged-in user's ID
+Permission.equals(PermissionField.entityId, PermissionField.loggedInUserId)
+
+// Allow access if the 'owner' property of the entity matches the logged-in user's ID
+Permission.equals(PermissionField.propertyName('owner'), PermissionField.loggedInUserId)
+
+// Allow access if the 'status' property of the entity is 'active'
+Permission.equals(PermissionField.propertyName('status'), PermissionField.value('active'))
+
+// Allow access if the 'assignedTo' property of the entity is null
+Permission.equals(PermissionField.propertyName('assignedTo'), PermissionField.value(null))
+
+// Allow access if the 'isPublic' property of the User entity referenced by the 'owner' property is true
+Permission.equals(
+  PermissionField.entity<UserEntity>(PermissionField.propertyName('owner'))
+      .propertyName('isPublic'),
+  PermissionField.value(true)
+)
+
+// Combine multiple conditions: Allow access if the user is an admin OR the owner of the entity
+Permission.admin | Permission.equals(PermissionField.propertyName('owner'), PermissionField.loggedInUserId)
+
+// Allow access if the 'manager' of the 'department' that the current entity belongs to is the logged-in user
+Permission.equals(
+  PermissionField.entity<DepartmentEntity>(PermissionField.propertyName('department'))
+    .propertyName('manager'),
+  PermissionField.loggedInUserId
+)
+
+// Allow access only if ALL of these conditions are true:
+// 1. The entity's 'status' is 'active'
+// 2. The entity's 'owner' is the logged-in user
+// 3. The 'isPublic' property of the User entity referenced by the 'owner' property is true
+Permission.equals(PermissionField.propertyName('status'), PermissionField.value('active'))
+  & Permission.equals(PermissionField.propertyName('owner'), PermissionField.loggedInUserId)
+  & Permission.equals(
+      PermissionField.entity<UserEntity>(PermissionField.propertyName('owner'))
+        .propertyName('isPublic'),
+      PermissionField.value(true)
+    )
+```
+
+### Enforcing Security with `withSecurity`
+
+The `withSecurity()` modifier on a repository allows you to enforce security rules. When applied, the repository will check the specified permissions before allowing any operation to proceed.
+
+Here's an example of applying security rules to a repository:
+
+```dart filename="example_core/lib/features/todo/todo_repository.dart"
+class TodoRepository with IsRepositoryWrapper {
+  @override
+  late Repository repository = Repository.forType<TodoEntity, Todo>(...).adapting('todo')
+    .withSecurity(RepositorySecurity.all(
+        Permission.admin |
+            Permission.equals(PermissionField.propertyName(Todo.userField), PermissionField.loggedInUserId),
+      ));
+}
+
+```
+
+In this example, the `TodoRepository` is configured to allow access only when the `user` field matches the `loggedInUserId` from the [Auth Module](/auth), effectively restricting users to access or modify only their own todos.
+
+### Bypassing local security
+
+`.withSecurity` will automatically enforce both query-modification and write permissions locally before it reaches the source database. If you would like to bypass the local security checks for administration or testing purposes, use `context.dropCoreComponent.runWithoutSecurity()`.
