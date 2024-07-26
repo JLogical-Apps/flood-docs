@@ -10,20 +10,20 @@ For example, let's say your app is hosted at `app.flooddev.com`. If a user opens
 
 This automatic navigation is made possible by the `pages` property of `AppPondComponent`s, which defines a map of `Route`s to their respective [AppPage](/pond/app/app-pages)s.
 
-## Navigate vs. Warp
+## Push vs. Warp
 
-Pond offers two primary methods for navigating between pages: `navigateTo` and `warpTo`. Understanding the difference between these methods is key to creating the desired user experience.
+Pond offers two primary methods for navigating between pages: `push` and `warpTo`. Understanding the difference between these methods is key to creating the desired user experience.
 
-### Navigate
+### Push
 
-The `navigateTo` method is used to push a new route onto the navigation stack. When you navigate to a new page using this method, the new page will have a "back" button that allows the user to return to the previous page.
+The `push` method is used to push a new route onto the navigation stack. When you navigate to a new page using this method, the new page will have a "back" button that allows the user to return to the previous page.
 
 This is the most common way to navigate between pages in your app, as it preserves the navigation history and provides a familiar user experience.
 
 For example:
 
 ```dart
-context.navigateTo(ProfileRoute()
+context.push(ProfileRoute()
     ..userIdProperty.set(userId)
     ..viewProperty.set('public'));
 ```

@@ -1,0 +1,153 @@
+import { Tabs } from 'nextra/components';
+
+# Install & Run Your First Flood App
+
+This guide will walk you through the process of setting up and running your first Flood app. We'll cover Flutter installation, project setup, customizing app icons and splash screens, and configuring the development environment.
+
+## Flutter Setup
+
+Before we begin, make sure you have Flutter installed on your system. If you haven't installed Flutter yet, please follow the official [Flutter installation guide](https://flutter.dev/docs/get-started/install).
+
+## Melos Setup
+
+Melos is a tool for managing Dart projects with multiple packages. It's particularly useful for Flood projects, which typically consist of multiple interconnected packages. Here's how to set up Melos:
+
+1. Install Melos globally using the Dart package manager:
+
+    ```bash
+    dart pub global activate melos
+    ```
+
+2. Verify the installation by running:
+
+    ```bash
+    melos --version
+    ```
+
+    You should see the version number of Melos if it's installed correctly.
+
+3. (Optional) If you encounter any issues with running Melos, ensure that your Dart SDK's bin directory is in your system's PATH.
+
+## Create Project
+
+You have two options to set up your Flood project:
+
+<Tabs items={['Mason (Recommended)', 'Template Repository']}>
+    <Tabs.Tab>
+        [Mason](https://pub.dev/packages/mason) is a powerful code generation tool that automates every aspect of the project creation process. It streamlines setup by generating all necessary files, configuring dependencies, and setting up the project structure according to Flood best practices.
+
+        1. Install Mason globally:
+
+            ```bash
+            dart pub global activate mason_cli
+            ```
+
+        2. Add the Flood brick:
+
+            ```bash
+            mason add -g flood
+            ```
+
+        3. Make the Flood brick within the parent directory you want to create your project in:
+
+            ```bash
+            # cd into the parent directory, such as `cd ~/StudioProjects`
+            mason make flood
+            ```
+
+        4. Follow the on-screen instructions to set up your project.
+
+        5. Run the following command to bootstrap your project, setting up all dependencies and linking local packages:
+
+            ```bash
+            melos bs
+            ```
+    </Tabs.Tab>
+    <Tabs.Tab>
+        1. Clone the Flood template repository:
+
+            ```bash
+            git clone https://github.com/JLogical-Apps/flood-template.git
+            ```
+
+        2. Follow the setup instructions in the template's README.md file.
+
+        3. Run the following command to bootstrap your project, setting up all dependencies and linking local packages:
+
+            ```bash
+            melos bs
+            ```
+    </Tabs.Tab>
+
+</Tabs>
+
+## Understanding Your Project Structure
+
+Once you've set up your Flood project using either Mason or the Template Repository, it's important to understand the structure of your new project.
+
+To learn more about how Flood projects are organized, including the purpose of different directories and key files, please refer to our [Project Structure](/core-concepts/project-structure) guide. This will help you navigate your new project and understand where to make changes as you develop your app.
+
+## App Icon & Splash Screen
+
+To customize your app's icon and splash screen:
+
+1. Move your app icon image to the following locations:
+
+    - `example/assets/logo_foreground.png`
+    - `example/assets/logo_foreground_transparent.png`
+
+2. Open `example_core/tool/automate.dart` and customize the color scheme and logo padding in the [NativeSetupAutomateCommand](/automate/native-setup). For example:
+
+    ```dart filename="example_core/tool/automate.dart"
+    await automatePondContext.register(NativeSetupAutomateComponent(
+      appIconForegroundFileGetter: (root) => root / 'assets' - 'logo_foreground_transparent.png',
+      backgroundColor: 0x172434, // Customize this color
+      padding: 80, // Adjust padding as needed
+    ));
+    ```
+
+3. From the `example_core` directory, run the following command:
+
+    ```bash
+    dart tool/automate.dart native_setup
+    ```
+
+This will use the [Automate Module](/automate) to generate the necessary app icons and splash screens based on your configuration. For more information on the Native Setup automation, check out the [Native Setup](/automate/native-setup) page.
+
+## Environment Configuration
+
+Flood provides different environments for development and testing. By default, the app uses the `production` environment, but since we haven't set up any cloud providers yet, we'll use the `testing` environment to avoid draining resources.
+
+To set up the `testing` environment:
+
+1. Create a new file `example/assets/config.overrides.yaml` if it doesn't exist already.
+
+2. Add the following content to the file:
+
+    ```yaml filename="example/assets/config.overrides.yaml"
+    environment: testing
+    ```
+
+This configuration will use the `testing` environment, which simulates all services in-memory. For more information on environments in Flood, refer to the [Environment](/environment) page.
+
+## Running The App
+
+With these steps completed, you're now ready to run your first Flood app! Use your preferred IDE or run the following command from the `example` directory:
+
+```bash
+flutter run
+```
+
+Your app should now launch in the testing environment with your custom app icon and splash screen.
+
+## Additional Reading
+
+### flutter_hooks
+
+Flood extensively uses `flutter_hooks` for state management. Before proceeding, we strongly recommend familiarizing yourself with this library:
+
+-   [flutter_hooks official documentation](https://pub.dev/packages/flutter_hooks)
+
+Understanding `flutter_hooks` will significantly enhance your ability to work with Flood effectively.
+
+Congratulations on setting up your Flood project! Once you're comfortable with `flutter_hooks`, continue to the [User Authentication](/user-authentication) guide to learn how to implement authentication in your app.

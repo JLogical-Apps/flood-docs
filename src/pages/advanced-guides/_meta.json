@@ -1,0 +1,9 @@
+{
+  "references": "References",
+  "repository-security": "Repository Security",
+  "asset-security": "Asset Security",
+  "customizing-ports": "Customizing Ports",
+  "value-object-polymorphism": "ValueObject Polymorphism",
+  "embedded-value-object-customization": "Embedded ValueObject Customization",
+  "offline-first-apps": "Offline-First Apps"
+}

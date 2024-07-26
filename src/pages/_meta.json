@@ -2,9 +2,21 @@
   "index": "Introduction",
   "get-started": "Get Started",
   "core-concepts": "Core Concepts",
+  "-guides": {
+    "type": "separator",
+    "title": "Guides"
+  },
+  "install-and-run-your-first-app": "Install & Run Your First App",
+  "user-authentication": "User Authentication",
+  "working-with-data": "Working with Data",
+  "navigation-and-route-security": "Navigation & Route Security",
+  "using-assets": "Assets",
+  "data-security": "Data Security",
+  "releasing-your-app": "Releasing Your App",
+  "advanced-guides": "Advanced Guides",
   "-modules": {
-    "title": "Modules",
-    "type": "separator"
+    "type": "separator",
+    "title": "Modules"
   },
   "pond": "Pond",
   "style": "Style",
@@ -13,14 +25,12 @@
   "asset": "Asset",
   "environment": "Environment",
   "automate": "Automate",
+  "backend": "Backend",
+  "i18n": "I18n",
   "auth": "Auth",
   "debug": "Debug",
   "persistence": "Persistence",
   "model": "Model",
-  "-other": {
-    "type": "separator",
-    "title": "Other"
-  },
   "path": "Path",
   "logs": "Logs",
   "share": "Share",
@@ -35,13 +45,17 @@
     "title": "Integrations"
   },
   "firebase": "Firebase",
-  "appwrite": "Appwrite (Coming Soon)",
-  "supabase": "Supabase (Coming Soon)",
-  "---release-notes": {
-    "type": "separator"
+  "appwrite": "Appwrite",
+  "supabase": "Supabase",
+  "--resources": {
+    "type": "separator",
+    "title": "Resources"
   },
-  "release-notes": {
-    "title": "Release Notes"
+  "release-notes": "Release Notes",
+  "flood-github-repository": {
+    "title": "Flood Github Repository",
+    "href": "https://github.com/JLogical-Apps/flood",
+    "newWindow": true
   },
   "access-flood": {
     "title": "Access Flood",
