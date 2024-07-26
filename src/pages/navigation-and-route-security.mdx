@@ -1,0 +1,366 @@
+# Navigation & Route Security
+
+## Before You Begin
+
+This guide builds upon the concepts introduced in the [User Authentication](/user-authentication) guide and assumes familiarity with basic routing in Flood. If you haven't completed the previous guides, you can start with the repository that ended off at the [Working with Data](/working-with-data) guide by cloning https://github.com/JLogical-Apps/flood-template/tree/drop.
+
+## Routes and AppPages
+
+In Flood, navigation is managed through the interaction of [Routes](/path#route) and [AppPages](/pond/app/app-pages). It's important to understand the distinction between these two concepts:
+
+-   **Routes** define a specific URL location and its associated parameters.
+-   **AppPages** are what is rendered when a Route is active.
+
+You register a mapping between Routes and AppPages in an [AppPondComponent](/pond/app#apppodcomponent). The `AppPage`'s `onBuild` method is wrapped around a `HookBuilder`, allowing you to use [flutter_hooks](https://pub.dev/packages/flutter_hooks) in the body.
+
+For more complex page behaviors, you can use an `AppPageWrapper` instead of a simple `AppPage`. This allows you to compose functionality and add features like redirects and parent pages.
+
+## Route Parameters
+
+Routes can include parameters to pass additional information. These parameters can be accessed in the corresponding `AppPage`. Let's explore different types of route parameters:
+
+### Query Parameters
+
+Query parameters are included in the URL after a question mark. Let's add an `only_completed` boolean query parameter to our home page:
+
+1. Update the `HomeRoute` in `example/lib/presentation/pages/home_page.dart`:
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {3-4,9-10}
+...
+class HomeRoute with IsRoute<HomeRoute> {
+  static const onlyCompletedField = 'only_completed';
+  late final onlyCompletedProperty = field<bool>(name: onlyCompletedField).withFallback(() => false);
+
+  @override
+  PathDefinition get pathDefinition => PathDefinition.home;
+
+  @override
+  List<RouteProperty> get queryProperties => [onlyCompletedProperty];
+
+  @override
+  HomeRoute copy() {
+    return HomeRoute();
+  }
+}
+...
+```
+
+2. Modify the query in the `HomePage` to filter todos based on the `only_completed` parameter:
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {9, 14-25}
+...
+class HomePage with IsAppPageWrapper<HomeRoute> {
+
+  ...
+
+  @override
+  Widget onBuild(BuildContext context, HomeRoute route) {
+    final loggedInUserId = useLoggedInUserIdOrNull();
+    final todosModel = useQuery(getTodosQuery(loggedInUserId, route.onlyCompletedProperty.value));
+
+    ...
+  }
+
+  Query<TodoEntity> getTodosQuery(String? loggedInUserId, bool onlyCompleted) {
+    Query<TodoEntity> query = Query.from<TodoEntity>()
+        .where(Todo.ownerField)
+        .isEqualTo(loggedInUserId)
+        .orderByAscending(CreationTimeProperty.field);
+
+    if (onlyCompleted) {
+      query = query.where(Todo.completedField).isEqualTo(true);
+    }
+
+    return query;
+  }
+}
+```
+
+Now you can use the [Url Bar Module](/url-bar) to test this functionality. Try navigating to `/?only_completed=true` to see only completed todos.
+
+![Only Completed Todos](/guides/navigation-and-route-security/only-completed-todos.png)
+
+### Path Parameters
+
+Path parameters are part of the URL path itself. Let's create a new route for viewing individual todos:
+
+1. Create a new file `example/lib/presentation/pages/todo_details_page.dart`:
+
+```dart filename="example/lib/presentation/pages/todo_details_page.dart"
+import 'package:flood/flood.dart';
+import 'package:flutter/material.dart';
+
+class TodoDetailsRoute with IsRoute<TodoDetailsRoute> {
+  late final todoIdProperty = field<String>(name: 'todoId').required();
+
+  @override
+  PathDefinition get pathDefinition => PathDefinition.string('todo').property(todoIdProperty);
+
+  @override
+  TodoDetailsRoute copy() => TodoDetailsRoute();
+}
+
+class TodoDetailsPage with IsAppPage<TodoDetailsRoute> {
+  @override
+  Widget onBuild(BuildContext context, TodoDetailsRoute route) {
+    final todoModel = useEntity<TodoEntity>(route.todoIdProperty.value);
+
+    return ModelBuilder(
+      model: todoModel,
+      builder: (TodoEntity todoEntity) {
+        return StyledPage(
+          titleText: 'Todo Details',
+          body: StyledList.column.withScrollbar(
+            children: [
+              StyledText.xl(todoEntity.value.nameProperty.value),
+              StyledCheckbox(
+                value: todoEntity.value.completedProperty.value,
+                labelText: 'Completed',
+                onChanged: (value) {
+                  context.dropCoreComponent.updateEntity(
+                    todoEntity,
+                    (Todo todo) => todo..completedProperty.set(value),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+2. Update the `PagesAppPondComponent` to include the new route:
+
+```dart filename="example/lib/presentation/pages_app_component.dart" {9}
+...
+class PagesAppPondComponent with IsAppPondComponent {
+  @override
+  Map<Route, AppPage> get pages => {
+        HomeRoute(): HomePage(),
+        LoginRoute(): LoginPage(),
+        SignupRoute(): SignupPage(),
+        ForgotPasswordRoute(): ForgotPasswordPage(),
+        TodoDetailsRoute(): TodoDetailsPage(),
+      };
+}
+```
+
+3. Update the `HomePage` to include a link to the todo details:
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {5}
+...
+StyledCard(
+  titleText: todoEntity.value.nameProperty.value,
+  leading: StyledCheckbox(...),
+  onPressed: () => context.push(TodoDetailsRoute()..todoIdProperty.set(todoEntity.id!)),
+  ...
+),
+...
+```
+
+Now you can navigate to individual todo items, and the URL will reflect the todo's ID, e.g., `/todo/123`.
+
+![Todo Details Page](/guides/navigation-and-route-security/todo-details.png)
+
+### Hidden Parameters
+
+Hidden parameters are not derived from the current path but must be explicitly added when creating a route. Let's add `email` and `password` hidden parameters to the `SignupRoute` to pre-fill the signup form with data from the login page:
+
+1. Update the `SignupRoute` in `example/lib/presentation/pages/signup_page.dart`:
+
+    ```dart filename="example/lib/presentation/pages/signup_page.dart" {3-4,9-10}
+    ...
+    class SignupRoute with IsRoute<SignupRoute> {
+      late final initialEmailProperty = field<String>(name: 'initialEmail');
+      late final initialPasswordProperty = field<String>(name: 'initialPassword');
+
+      @override
+      PathDefinition get pathDefinition => PathDefinition.string('signup');
+
+      @override
+      List<RouteProperty> get hiddenProperties => [initialEmailProperty, initialPasswordProperty];
+
+      @override
+      SignupRoute copy() => SignupRoute();
+    }
+    ...
+    ```
+
+2. Modify the `SignupPage` to use these initial values:
+
+    ```dart filename="example/lib/presentation/pages/signup_page.dart" {9,13}
+    ...
+    class SignupPage with IsAppPageWrapper<SignupRoute> {
+
+      ...
+
+      @override
+      Widget onBuild(BuildContext context, SignupRoute route) {
+        final signupPort = useMemoized(() => Port.of({
+              'email': PortField.string(initialValue: route.initialEmailProperty.value)
+                  .withDisplayName('Email')
+                  .isNotBlank()
+                  .isEmail(),
+              'password': PortField.string(initialValue: route.initialPasswordProperty.value)
+                  .withDisplayName('Password')
+                  .isNotBlank()
+                  .isPassword(),
+              'confirmPassword': PortField.string()
+                  .withDisplayName('Confirm Password')
+                  .isNotBlank()
+                  .isConfirmPassword(passwordField: 'password'),
+            }));
+
+        // ... rest of the build method
+      }
+    }
+    ```
+
+3. Update the `LoginPage` to pass these parameters when navigating to the signup page:
+
+    ```dart filename="example/lib/presentation/pages/login_page.dart" {6-7}
+    ...
+    StyledButton.strong(
+      labelText: 'Sign Up',
+      onPressed: () async {
+        context.push(SignupRoute()
+          ..initialEmailProperty.set(loginPort['email'])
+          ..initialPasswordProperty.set(loginPort['password']));
+      },
+    ),
+    ...
+    ```
+
+`loginPort['email']` and `loginPort['password']` will return the unvalidated, raw values for the email and password fields in the port.
+
+Now, when a user clicks the "Sign Up" button on the login page, their email and password will be pre-filled in the signup form.
+
+## Parents
+
+AppPages can have parent pages, which affects navigation and security. When you warp to a route whose AppPage has a parent, that parent page will be below the current page in the navigation stack. This creates a natural hierarchy and allows for intuitive back navigation.
+
+It's important to note that when users navigate directly to a URL in the web version of your app (for example, `https://my.todo.app/signup`), Flood will warp directly to that route. However, the parent hierarchy is still maintained. This means that even when accessing a page directly, users will still have the ability to navigate back to the parent page, preserving the intended navigation structure of your app.
+
+Let's set `LoginRoute` as the parent of `SignupPage`:
+
+1. Update the `SignupPage` in `example/lib/presentation/pages/signup_page.dart`:
+
+```dart filename="example/lib/presentation/pages/signup_page.dart" {4}
+...
+class SignupPage with IsAppPageWrapper<SignupRoute> {
+  @override
+  AppPage<SignupRoute> get appPage => AppPage<SignupRoute>().withParent((context, route) => LoginRoute());
+
+  ...
+}
+```
+
+Now, when a user navigates to the signup page, they'll see a back button that takes them to the login page. This creates a more intuitive flow for users who might want to go back to the login page instead of signing up.
+
+## Route Guards
+
+Route guards are a powerful way to control access to pages based on the user's authentication status or other conditions. In Flood, we implement route guards using redirects on `AppPageWrapper`s.
+
+Let's create some utility functions to simplify adding common route guards:
+
+1. Create a new file `example/lib/utils/route_utils.dart`:
+
+    ```dart filename="example/lib/utils/route_utils.dart"
+    import 'package:flood/flood.dart';
+
+    extension RedirectAppPageExtensions<R extends Route> on AppPage<R> {
+      AppPage<R> onlyIfLoggedIn() {
+        return withRedirect((context, route) async {
+          final loggedInUserId = context.authCoreComponent.loggedInUserId;
+          if (loggedInUserId == null) {
+            return LoginRoute().routeData;
+          }
+          return null;
+        });
+      }
+
+      AppPage<R> onlyIfNotLoggedIn() {
+        return withRedirect((context, route) async {
+          final loggedInUserId = context.authCoreComponent.loggedInUserId;
+          if (loggedInUserId != null) {
+            return HomeRoute().routeData;
+          }
+          return null;
+        });
+      }
+
+      AppPage<R> onlyIfAccountExists() {
+        return onlyIfLoggedIn().withRedirect((context, route) async {
+          final loggedInUserId = context.authCoreComponent.loggedInUserId;
+          final userEntity = await Query.getByIdOrNull<UserEntity>(loggedInUserId!).get(context.dropCoreComponent);
+          if (userEntity == null) {
+            return LoginRoute().routeData;
+          }
+          return null;
+        });
+      }
+    }
+    ```
+
+    Now, let's apply these route guards to our pages:
+
+2. Update `HomePage` in `example/lib/presentation/pages/home_page.dart`:
+
+    ```dart filename="example/lib/presentation/pages/home_page.dart" {4}
+    ...
+    class HomePage with IsAppPageWrapper<HomeRoute> {
+      @override
+      AppPage<HomeRoute> get appPage => AppPage<HomeRoute>().onlyIfAccountExists();
+
+      ...
+    }
+    ```
+
+3. Update `LoginPage` in `example/lib/presentation/pages/login_page.dart`:
+
+    ```dart filename="example/lib/presentation/pages/login_page.dart" {2,4}
+    ...
+    class LoginPage with IsAppPageWrapper<LoginRoute> {
+      @override
+      AppPage<LoginRoute> get appPage => AppPage<LoginRoute>().onlyIfNotLoggedIn();
+      ...
+    }
+    ```
+
+4. Update `SignupPage` in `example/lib/presentation/pages/signup_page.dart`:
+
+    ```dart filename="example/lib/presentation/pages/login_page.dart" {5}
+    ...
+    class SignupPage with IsAppPageWrapper<SignupRoute> {
+      @override
+      AppPage<SignupRoute> get appPage => AppPage<SignupRoute>()
+          .onlyIfNotLoggedIn()
+          .withParent((context, route) => LoginRoute());
+
+      ...
+    }
+    ```
+
+These route guards ensure that:
+
+-   The home page is only accessible to logged-in users with existing accounts.
+-   The login and signup pages are only accessible to users who are not logged in.
+-   The signup page has the login page as its parent for intuitive navigation.
+
+To test these out, try:
+
+-   Logging in and using the Url Bar to navigate to `/login` or `/signup`. Notice that you will be taken to the home route `/` instead.
+-   Logging out and using the Url Bar to navigate to `/`. Notice that you will be taken to the `/login` route instead.
+
+## Important Security Note
+
+While route guards are excellent for controlling navigation and improving user experience, they should not be relied upon as the sole means of securing your application's data. It's crucial to implement proper security measures at the data layer, such as in your [repositories](/drop/repositories-and-security#repositories) and [asset providers](/asset#asset-security).
+
+A motivated attacker could potentially bypass client-side route guards, so always ensure that your data is protected server-side as well. For more information on securing your data, refer to the [Data Security](/data-security) guide.
+
+## Next Steps
+
+Now that you have a solid understanding of navigation and route security in Flood, let's connect your application to a cloud environment. Follow the [Cloud Environments](/cloud-environments) guide to link your project with Firebase, which will prepare you for implementing more advanced features and data security measures.

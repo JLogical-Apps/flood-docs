@@ -1,0 +1,9 @@
+{
+  "references": {"type": "page", "display": "hidden"},
+  "repository-security": {"type": "page", "display": "hidden"},
+  "asset-security": {"type": "page", "display": "hidden"},
+  "customizing-ports": {"type": "page", "display": "hidden"},
+  "value-object-polymorphism": {"type": "page", "display": "hidden"},
+  "embedded-value-object-customization": {"type": "page", "display": "hidden"},
+  "offline-first-apps": {"type": "page", "display": "hidden"}
+}

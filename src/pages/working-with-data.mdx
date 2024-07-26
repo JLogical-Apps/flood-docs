@@ -1,0 +1,599 @@
+# Working with Data
+
+## Before You Begin
+
+This guide builds upon the knowledge and project structure established in the previous guides, particularly the [User Authentication](/user-authentication) guide. If you haven't completed the previous guides, you can start with the repository that ended off at the last guide by cloning https://github.com/JLogical-Apps/flood-template/tree/auth.
+
+## Domain-Driven Design (DDD)
+
+Before we dive into the specifics of working with data in Flood, it's important to understand the concept of Domain-Driven Design (DDD) and how it's incorporated into the Drop module.
+
+Domain-Driven Design is an approach to software development that focuses on creating a shared understanding of the problem domain between developers and domain experts. It emphasizes modeling the domain (the specific problem area) in a way that reflects the real-world concepts and relationships within that domain.
+
+The Drop module in Flood incorporates several key concepts from DDD:
+
+1. **Entities**: Objects that have a distinct identity that runs through time and different representations. In Flood, these are represented by the `Entity` class.
+
+2. **Value Objects**: Objects that describe some characteristic or attribute but lack a distinct identity. In Flood, these are represented by the `ValueObject` class.
+
+3. **Repositories**: Objects that handle the storage, retrieval, and searching of entities. In Flood, these are represented by the `Repository` class.
+
+By leveraging these DDD concepts, Flood helps you create a more maintainable and understandable codebase that closely mirrors your application's domain.
+
+## The `flood_feature` Mason Brick
+
+To streamline the process of creating new features in your Flood project, we'll use the `flood_feature` Mason brick. This brick generates the necessary files for a new feature, including a ValueObject, Entity, and Repository.
+
+### Installing Mason and the flood_feature Brick
+
+If you haven't installed Mason yet, you can do so by running the following command:
+
+```bash
+dart pub global activate mason_cli
+```
+
+Once Mason is installed, add the `flood_feature` brick globally:
+
+```bash
+mason add -g flood_feature
+```
+
+This will make the `flood_feature` brick available for use in any of your Flood projects.
+
+### Using the `flood_feature` Brick
+
+To generate a new feature using the `flood_feature` brick, follow these steps:
+
+1. Navigate to your core project's features directory. For example, `example_core/lib/features`
+
+2. Run the following command:
+
+    ```bash
+    mason make flood_feature
+    ```
+
+3. When prompted, enter the name of your feature (e.g., "user" or "todo").
+
+    This will generate three files in your `core` project under the `features` directory:
+
+    - `[feature_name].dart`: Contains the ValueObject definition
+    - `[feature_name]_entity.dart`: Contains the Entity definition
+    - `[feature_name]_repository.dart`: Contains the Repository definition
+
+    Let's use this brick to create our User and Todo features.
+
+## Setting Up User and Todo Features
+
+### User Feature
+
+First, let's create the User feature:
+
+```bash
+mason make flood_feature
+```
+
+When prompted, enter "user" as the feature name.
+
+Now, let's modify the generated files to include the fields we need:
+
+```dart filename="example_core/lib/features/user/user.dart"
+import 'package:flood_core/flood_core.dart';
+
+class User extends ValueObject {
+  static const nameField = 'name';
+  late final nameProperty = field<String>(name: nameField).withDisplayName('Name').isNotBlank();
+
+  static const emailField = 'email';
+  late final emailProperty = field<String>(name: emailField).withDisplayName('Email').isNotBlank().isEmail();
+
+  @override
+  late final List<ValueObjectBehavior> behaviors = [
+    nameProperty,
+    emailProperty,
+    creationTime(),
+  ];
+}
+```
+
+Let's break down the fields in the User ValueObject:
+
+1. `nameProperty`:
+
+    - Type: String
+    - Display Name: "Name"
+    - Validation: Must not be blank
+    - Purpose: Stores the user's name
+
+2. `emailProperty`:
+
+    - Type: String
+    - Display Name: "Email"
+    - Validation: Must not be blank and must be a valid email address
+    - Purpose: Stores the user's email address
+
+3. `creationTime()`:
+    - Type: Timestamp
+    - Purpose: Stores the time the ValueObject was created.
+
+These fields define the structure of our User data. The `isNotBlank()` and `isEmail()` modifiers add validation rules to ensure data integrity.
+
+The Entity file (`user_entity.dart`) can remain empty for now, as it extends `Entity<User>` which provides all the necessary functionality.
+
+For a more detailed explanation of ValueObjects and Entities, their fields, and available options, please refer to the [ValueObjects and Entities documentation](/drop/value-objects-and-entities).
+
+For the Repository, we'll use a simple adapting repository without any security rules for now:
+
+```dart filename="example_core/lib/features/user/user_repository.dart"
+import 'package:flood_core/flood_core.dart';
+import 'user.dart';
+import 'user_entity.dart';
+
+class UserRepository with IsRepositoryWrapper {
+  @override
+  late final repository = Repository.forType<UserEntity, User>(
+    UserEntity.new,
+    User.new,
+    entityTypeName: 'UserEntity',
+    valueObjectTypeName: 'User',
+  ).adapting('user');
+}
+```
+
+### Todo Feature
+
+Now, let's create the Todo feature:
+
+```bash
+mason make flood_feature
+```
+
+When prompted, enter "todo" as the feature name.
+
+Modify the generated files as follows:
+
+```dart filename="example_core/lib/features/todo/todo.dart"
+import 'package:flood_core/flood_core.dart';
+import '../user/user_entity.dart';
+
+class Todo extends ValueObject {
+  static const nameField = 'name';
+  late final nameProperty = field<String>(name: nameField).withDisplayName('Name').isNotBlank();
+
+  static const ownerField = 'owner';
+  late final ownerProperty = reference<UserEntity>(name: ownerField).required().hidden();
+
+  static const completedField = 'completed';
+  late final completedProperty = field<bool>(name: completedField).withFallback(() => false).hidden();
+
+  @override
+  late final List<ValueObjectBehavior> behaviors = [
+    nameProperty,
+    ownerProperty,
+    completedProperty,
+    creationTime(),
+  ];
+}
+```
+
+Let's break down the fields in the Todo ValueObject:
+
+1. `nameProperty`:
+
+    - Type: String
+    - Display Name: "Name"
+    - Validation: Must not be blank
+    - Purpose: Stores the name or title of the todo item
+
+2. `ownerProperty`:
+
+    - Type: Reference to UserEntity
+    - Validation: Required (must not be null)
+    - Purpose: Stores a reference to the User who owns this todo item
+
+3. `completedProperty`:
+
+    - Type: Boolean
+    - Default Value: false (set by `withFallback`)
+    - Purpose: Indicates whether the todo item has been completed
+
+4. `creationTime()`:
+    - Type: Timestamp
+    - Purpose: Stores the time the ValueObject was created.
+
+These fields define the structure of our Todo data. The `reference<UserEntity>` type for the `ownerProperty` creates a relationship between the Todo and User entities, allowing us to associate each todo item with a specific user. The `hidden()` modifier prevents the field from being edited in the auto-generated [Port UI](/drop/ui-and-hooks#auto-generated-ui).
+
+Again, the Entity file (`todo_entity.dart`) can remain empty.
+
+For the Repository:
+
+```dart filename="example_core/lib/features/todo/todo_repository.dart"
+import 'package:flood/flood.dart';
+import 'todo.dart';
+import 'todo_entity.dart';
+
+class TodoRepository with IsRepositoryWrapper {
+  @override
+  late final repository = Repository.forType<TodoEntity, Todo>(
+    TodoEntity.new,
+    Todo.new,
+    entityTypeName: 'TodoEntity',
+    valueObjectTypeName: 'Todo',
+  ).adapting('todo');
+}
+```
+
+## Registering Repositories
+
+Now that we have defined our User and Todo repositories, we need to register them with the [CorePondContext](/pond/core). This step is crucial as it makes these repositories available for use throughout our application.
+
+Open the `example_core/lib/pond.dart` file and update it as follows:
+
+```dart filename="example_core/lib/pond.dart" {8-9}
+...
+Future<CorePondContext> getCorePondContext({...}) async {
+  final corePondContext = CorePondContext();
+  await corePondContext.register(FloodCoreComponent(
+    // ... existing configuration ...
+  ));
+
+  await corePondContext.register(UserRepository());
+  await corePondContext.register(TodoRepository());
+
+  return corePondContext;
+}
+```
+
+By registering these repositories, we're telling the Flood framework about our data models and where to store/retrieve the data. This registration process is what allows us to use these repositories throughout our application, including in our queries and data manipulation operations.
+
+Remember to import the repository files at the top of `pond.dart` as shown in the example above.
+
+With these repositories registered, we can now use them to query and manipulate User and Todo data throughout our application.
+
+## Updating Data
+
+Now that we have our User and Todo features set up, let's look at how to update data using the [Drop Module](/drop).
+
+### Creating a User on Signup
+
+First, we'll create a `User` whenever a new user signs up. We'll update the signup port to include a name field and create the user entity with the same ID as the account ID. Modify your `SignupPage` in `example/lib/presentation/pages/signup_page.dart`:
+
+```dart filename="example/lib/presentation/pages/signup_page.dart" {10,38-42}
+import 'package:example_core/features/user/user.dart';
+import 'package:example_core/features/user/user_entity.dart';
+
+// ... existing imports and code ...
+
+class SignupPage with IsAppPage<SignupRoute> {
+  @override
+  Widget onBuild(BuildContext context, SignupRoute route) {
+    final signupPort = useMemoized(() => Port.of({
+          'name': PortField.string().withDisplayName('Name').isNotBlank().isName(),
+          'email': PortField.string().withDisplayName('Email').isNotBlank().isEmail(),
+          'password': PortField.string().withDisplayName('Password').isNotBlank().isPassword(),
+          'confirmPassword': PortField.string()
+              .withDisplayName('Confirm Password')
+              .isNotBlank()
+              .isConfirmPassword(passwordField: 'password'),
+        }));
+
+    return StyledPage(
+      titleText: 'Signup',
+      body: StyledList.column.centered.withScrollbar(
+        children: [
+          ...
+          StyledButton.strong(
+            labelText: 'Sign Up',
+            onPressed: () async {
+              final result = await signupPort.submit();
+              if (!result.isValid) {
+                return;
+              }
+
+              final data = result.data;
+
+              try {
+                final account = await context.authCoreComponent
+                    .signup(AuthCredentials.email(email: data['email'], password: data['password']));
+
+                await context.dropCoreComponent.updateEntity(UserEntity()
+                  ..id = account.accountId
+                  ..set(User()
+                    ..nameProperty.set(data['name'])
+                    ..emailProperty.set(data['email'])));
+
+                context.warpTo(HomeRoute());
+              } catch (e, stackTrace) {
+                final errorText = e.as<SignupFailure>()?.displayText ?? e.toString();
+                signupPort.setError(path: 'email', error: errorText);
+                context.logError(e, stackTrace);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+In this updated version:
+
+1. We've added a 'name' field to the signup port, using `isName()` to indicate it should be treated as a name input.
+2. When creating the user entity, we now set its ID to be the same as the account ID. This allows us to easily retrieve the UserEntity based on the logged-in user ID later.
+3. We use the `set()` method on the UserEntity to update its properties with the User ValueObject.
+
+This approach ensures that our User data is correctly associated with the authenticated account and includes the user's name.
+
+## Validating User Creation
+
+After successfully signing up and restarting the app, you can validate that the UserEntity was created correctly in two ways:
+
+1. Check the logs for an update entry:
+   You should see a log entry similar to this:
+
+    ```
+    Called [Update] with [State({someId}, UserEntity, {name: {name}, email: {someEmail}})]: [State({someId}, UserEntity, {name: {name}, email: {someEmail}})]
+    ```
+
+    This log confirms that the UserEntity was updated in the repository.
+
+2. Use the [Debug Drop](/debug#drop) page:
+   You can visually inspect the created UserEntity using the Drop debug page. To access this, navigate to `/_debug/drop` using the [URL Bar Module](/url-bar). On this page, you can view the contents of the UserRepository and confirm that your user was created successfully.
+
+![Drop Debug Page](/guides/working-with-data/drop-debug-page.png)
+
+In this screenshot, you can see the UserRepository and its contents, including the newly created UserEntity.
+
+These validation steps help ensure that the user signup process is working correctly and that the UserEntity is being properly stored in the repository.
+
+### Adding a "Create Todo" Button
+
+Let's add a "Create Todo" button to the home page. Modify your `HomePage` in `example/lib/presentation/pages/home_page.dart`:
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {3,5-22}
+...
+return StyledPage(
+  titleText: 'Todos',
+  ...,
+  body: StyledList.column.centered.withScrollbar(
+    children: [
+      StyledButton.strong(
+        labelText: 'Create Todo',
+        onPressed: loggedInUserId == null
+            ? null
+            : () async {
+                await context.showStyledDialog(StyledPortDialog(
+                  titleText: 'Create Todo',
+                  port: (Todo()..ownerProperty.set(loggedInUserId)).asPort(context.corePondContext),
+                  onAccept: (Todo todo) async {
+                    await context.dropCoreComponent.updateEntity(TodoEntity()..set(todo));
+                  },
+                ));
+              },
+      ),
+    ],
+  ),
+);
+```
+
+Let's break down what's happening in this code:
+
+1. We create a `StyledButton` labeled "Create Todo".
+
+2. The `onPressed` callback is set to `null` if `loggedInUserId` is `null`, effectively disabling the button when no user is logged in.
+
+3. When a logged-in user presses the button, we show a `StyledPortDialog`:
+
+    - The dialog's title is set to "Create Todo".
+    - We create a new `Todo` instance and immediately set its `ownerProperty` to the `loggedInUserId`. This is crucial because the `ownerProperty` is required, and we need to set it before creating the Port.
+    - We convert this pre-filled `Todo` into a Port using `asPort(context.corePondContext)`. This creates a form based on the `Todo`'s properties, but with the `ownerProperty` already set and hidden from the user.
+
+4. The `onAccept` callback is triggered when the user submits the form in the dialog:
+
+    - It receives a `Todo` object (`todo`) that contains all the values the user entered in the form.
+    - We then create a new `TodoEntity` and immediately set its value to the `todo` object using `..set(todo)`. This copies all the properties from the `Todo` to the `TodoEntity`.
+    - Finally, we call `context.dropCoreComponent.updateEntity()` to save this new `TodoEntity` to the repository.
+
+This approach ensures that the `owner` is always set correctly (to the current user) and allows the user to fill in the other details of the Todo. It also demonstrates how to use `StyledPortDialog` to create a form dialog based on a ValueObject, and how to save the resulting entity to the repository.
+
+![Create Todo Dialog](/guides/working-with-data/create-todo.png)
+
+## Querying Data
+
+Now that we can create Todos, let's display them on the home page using the `useQuery` hook.
+
+Update your `HomePage` as follows:
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {6-10,20-42}
+...
+class HomePage with IsAppPageWrapper<HomeRoute> {
+  @override
+  Widget onBuild(BuildContext context, HomeRoute route) {
+    final loggedInUserId = useLoggedInUserIdOrNull();
+    final todosModel = useQuery(Query.from<TodoEntity>()
+        .where(Todo.ownerField)
+        .isEqualTo(loggedInUserId)
+        .orderByAscending(CreationTimeProperty.field)
+        .all());
+
+    return StyledPage(
+      titleText: 'Home',
+      actions: [
+        ...
+      ],
+      body: StyledList.column.centered.withScrollbar(
+        children: [
+          ...
+          ModelBuilder(
+            model: todosModel,
+            builder: (List<TodoEntity> todoEntities) {
+              return StyledList.column(
+                ifEmptyText: 'You have no Todos!',
+                children: todoEntities
+                    .map((todoEntity) => StyledCard(
+                          titleText: todoEntity.value.nameProperty.value,
+                          leading: StyledCheckbox(
+                            value: todoEntity.value.completedProperty.value,
+                            onChanged: (value) {
+                              context.dropCoreComponent
+                                  .updateEntity(todoEntity, (Todo todo) => todo..completedProperty.set(value));
+                            },
+                          ),
+                          actions: ActionItem.static.entityCrudActions(context,
+                              entity: todoEntity,
+                              duplicator: (Todo todo) => todo..nameProperty.update((name) => '$name - Copy')),
+                        ))
+                    .toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+Let's break down the key components of this code:
+
+### Querying Todos
+
+```dart
+final todosModel = useQuery(Query.from<TodoEntity>()
+    .where(Todo.ownerField)
+    .isEqualTo(loggedInUserId)
+    .orderByAscending(CreationTimeProperty.field)
+    .all());
+```
+
+This query does the following:
+
+-   Queries from the `TodoEntity` repository (`TodoRepository`)
+-   Filters todos where the `ownerField` matches the `loggedInUserId`
+-   Orders the results by the creation time in ascending order (oldest first)
+-   Retrieves all matching todos
+
+The `useQuery` hook returns a `Model` that we can use in a `ModelBuilder` to handle loading and error states.
+
+### Displaying Todos
+
+```dart
+ModelBuilder(
+  model: todosModel,
+  builder: (List<TodoEntity> todos) {
+    return StyledList.column(
+      ifEmptyText: 'You have no Todos!',
+      children: todos
+          .map((todoEntity) => StyledCard(
+                titleText: todoEntity.value.nameProperty.value,
+                leading: StyledCheckbox(
+                  value: todoEntity.value.completedProperty.value,
+                  onChanged: (value) {
+                    context.dropCoreComponent
+                        .updateEntity(todoEntity, (Todo todo) => todo..completedProperty.set(value));
+                  },
+                ),
+                actions: ActionItem.static.entityCrudActions(context,
+                    entity: todoEntity,
+                    duplicator: (Todo todo) => todo..nameProperty.update((name) => '$name - Copy')),
+              ))
+          .toList(),
+    );
+  },
+)
+```
+
+This code uses `ModelBuilder` to handle the state of the `todosModel`:
+
+-   If there are no todos, it displays "You have no Todos!"
+-   For each todo, it creates a `StyledCard` with:
+    -   The todo's name as the title
+    -   A checkbox indicating the completed status
+    -   Action items for editing, duplicating, and deleting the todo
+
+![View Todos](/guides/working-with-data/view-todos.png)
+
+### CRUD Actions
+
+The `ActionItem.static.entityCrudActions` method automatically generates action items for editing, duplicating, and deleting the todo. It handles showing the Port form and updating the Drop repositories automatically, making it easy to modify entities.
+
+The `duplicator` parameter specifies how to modify a todo when duplicating. In this case, it appends " - Copy" to the name of the duplicated todo.
+
+![Edit Todos](/guides/working-with-data/edit-todos.png)
+
+### Updating Todo Status
+
+To allow users to update the completed status of a todo by clicking the checkbox, we've added an `onChanged` callback to the `StyledCheckbox`:
+
+```dart
+StyledCheckbox(
+  value: todoEntity.value.completedProperty.value,
+  onChanged: (value) {
+    context.dropCoreComponent
+        .updateEntity(todoEntity, (Todo todo) => todo..completedProperty.set(value));
+  },
+),
+```
+
+This code does the following:
+
+1. When the checkbox is toggled, the `onChanged` callback is triggered with the new value.
+2. We use `context.dropCoreComponent.updateEntity` to update the todo entity.
+3. The update function sets the `completedProperty` of the todo to the new value.
+
+By using `updateEntity`, we ensure that the change is immediately reflected in the UI and persisted to the repository.
+
+With these updates, users can now view their todos, create new ones, edit existing ones, mark them as completed or incomplete, and delete them. The UI will automatically update to reflect any changes, providing a smooth and responsive user experience.
+
+## Setting up Test Data
+
+To make testing easier, let's modify the `_setupTesting` function in `example/lib/main.dart` to create a user account and some test Todos:
+
+```dart filename="example/lib/main.dart"
+...
+
+Future<void> _setupTesting(CorePondContext corePondContext) async {
+  final account = await corePondContext.authCoreComponent
+      .signup(AuthCredentials.email(email: 'test@test.com', password: 'password'));
+
+  await corePondContext.dropCoreComponent.updateEntity(
+    UserEntity()
+      ..id = account.accountId
+      ..set(User()
+        ..nameProperty.set('Test')
+        ..emailProperty.set('test@test.com')),
+  );
+
+  // Create some test Todos
+  final todoNames = ['Buy groceries', 'Finish project', 'Call mom', 'Go for a run', 'Read a book'];
+  for (var i = 0; i < todoNames.length; i++) {
+    await corePondContext.dropCoreComponent.updateEntity(TodoEntity()
+      ..set(
+        Todo()
+          ..nameProperty.set(todoNames[i])
+          ..ownerProperty.set(account.accountId)
+          ..completedProperty.set(i == 0), // Only the first Todo should be completed
+      ));
+  }
+}
+```
+
+This setup does the following:
+
+1. We use `signup` instead of `createAccount`. This change is important because `signup` not only creates the account but also logs the user in. This means that when the app is restarted in the testing environment, the test user will already be logged in.
+
+2. We create a `UserEntity` for the test account, setting the name and email properties.
+
+3. We create five test Todos with different names. Each Todo is associated with the test user's account ID, and we alternate between setting them as completed and not completed.
+
+By using `signup`, we ensure that the test user is logged in when the app starts in the testing environment. This allows you to immediately see the list of Todos on the home page without having to manually log in each time you restart the app for testing.
+
+Remember that this test data setup only runs in the `testing` environment. In production or when users are actually using your app, they would go through the normal signup process and create their own Todos.
+
+This approach provides a consistent starting point for testing your app's functionality, allowing you to verify that the Todo list, creation, editing, and completion features are working correctly each time you run the app in the testing environment.
+
+## Next Steps
+
+Congratulations! You've now learned the basics of working with data in Flood. You can create, update, query, and display entities using the Drop module. With this knowledge, you can start building more complex applications.
+
+In the upcoming guides, we'll explore more advanced topics to help you fine-tune your applications and add security.

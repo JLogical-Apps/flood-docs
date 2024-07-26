@@ -1,0 +1,744 @@
+# User Authentication
+
+## Before You Begin
+
+Before getting started with this guide, make sure you have a project created by following the [Install & Run Your First App](/install-and-run-your-first-app) guide. If you encounter any issues or want to see a reference implementation, you can check out the completed project for this guide [here](https://github.com/JLogical-Apps/flood-template/tree/auth).
+
+## AuthServices
+
+### Introduction
+
+The [Auth Module](/auth) in Flood provides a unified way to handle user authentication across different platforms and environments through the use of `AuthService`. An `AuthService` is responsible for managing authentication operations such as login, signup, logout, password reset, and fetching the currently logged-in user.
+
+### Adapting
+
+Flood's Auth Module uses an adapting approach, which means it automatically selects the appropriate `AuthService` based on the current [environment](/environment). This allows you to use the same code for authentication across different environments (e.g., testing, development, production) without modifying your implementation.
+
+## Login Page
+
+### Creating the LoginRoute and LoginPage
+
+To create a login page, we need to define a `LoginRoute` and a `LoginPage`. In Flood, [Routes](/path#route) define the URL structure and parameters for a page, while [AppPages](/pond/app/app-pages) define the actual content and behavior of the page.
+
+Create a new file `example/lib/presentation/login_page.dart` and add the following code:
+
+```dart filename="example/lib/presentation/login_page.dart"
+import 'package:flood/flood.dart';
+import 'package:flutter/material.dart';
+
+class LoginRoute with IsRoute<LoginRoute> {
+  @override
+  PathDefinition get pathDefinition => PathDefinition.string('login');
+
+  @override
+  LoginRoute copy() => LoginRoute();
+}
+
+class LoginPage with IsAppPage<LoginRoute> {
+  @override
+  Widget onBuild(BuildContext context, LoginRoute route) {
+    return StyledPage(
+      titleText: 'Login',
+      body: Center(
+        child: StyledText.body('Login Page'),
+      ),
+    );
+  }
+}
+```
+
+### Page and Route Registration
+
+To make your new login page accessible, you need to register it with the `PagesAppPondComponent`. Open `example/lib/presentation/pages_pond_component.dart` and add the following to the `pages` map:
+
+```dart filename="example/lib/presentation/pages_pond_component.dart" {5}
+class PagesAppPondComponent with IsAppPondComponent {
+  @override
+  Map<Route, AppPage> get pages => {
+        HomeRoute(): HomePage(),
+        LoginRoute(): LoginPage(),
+      };
+}
+```
+
+### Navigating to the Login Page
+
+Now that you've registered the login page, you can navigate to it using the URL `/login`. However, in mobile apps, you don't have a traditional address bar to enter URLs. This is where the [Url Bar Module](/url-bar) comes in handy.
+
+The Url Bar Module provides a convenient way to navigate to different pages in your Flood app, even on mobile devices. To access the Url Bar:
+
+1. Long-press on the bottom-left corner of your app's screen.
+2. The Url Bar will appear at the bottom of the screen.
+3. Enter `/login` in the Url Bar and press enter.
+
+This will navigate you to the newly created login page. The Url Bar is particularly useful during development and testing, allowing you to easily move between different pages in your app without implementing navigation buttons for every possible route.
+
+Remember, the Url Bar is automatically included when you use the [FloodAppComponent](/pond/app#pre-built-components), so you don't need to add any extra code to enable this feature.
+
+If you've done everything right, you should see a page that looks like this:
+
+![Empty LoginPage](/guides/user-authentication/empty-login-page.png)
+
+### Introduction to the Style Module
+
+Let's work on designing the Login Page so that it contains our logo, some large text, the email and password fields, and the login and signup buttons. Before we do that, we need to understand how to design and style widgets in Flood.
+
+The [Style Module](/style) in Flood provides a consistent way to style your application. It helps maintain visual consistency, handle theme variations, and apply styles efficiently across your app. By using `StyledComponent`s, you can create a cohesive look while keeping your code clean and maintainable.
+
+This was heavily inspired by the web, where HTML defines the structure of a page and CSS defines the style of a page. Using `StyledComponent`s defines the structure of the page, and a `Style` defines how these `StyledComponent`s are styled.
+
+Let's start by using some `StyledComponent`s to create the login page UI. Update your `LoginPage`:
+
+```dart filename="example/lib/presentation/pages/login_page.dart" {4-36}
+class LoginPage with IsAppPage<LoginRoute> {
+  @override
+  Widget onBuild(BuildContext context, LoginRoute route) {
+    return StyledPage(
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.all(4),
+          child: StyledList.column.centered.withScrollbar(
+            children: [
+              StyledImage.asset('assets/logo_foreground.png', width: 200, height: 200),
+              StyledText.twoXl.strong.display('Welcome to Todo'),
+              StyledText.body.display('Turning Chaos into Checked Boxes'),
+              StyledDivider(),
+              // TODO Email/password fields
+              StyledList.row.centered.withScrollbar(
+                children: [
+                  StyledButton(
+                    labelText: 'Login',
+                    onPressed: () async {
+                      // TODO Login and navigate to the home page.
+                    },
+                  ),
+                  StyledButton.strong(
+                    labelText: 'Sign Up',
+                    onPressed: () async {
+                      // TODO Navigate to the sign up page.
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+Here's a brief explanation of each `StyledComponent` used in the login page:
+
+1. `StyledPage`: A base component for creating structured pages with a consistent layout.
+
+2. `StyledList.column` and `StyledList.row`: Organize child widgets in a column or row layout, respectively. The `.centered` modifier aligns items on the cross-axis to the center.
+
+3. `.withScrollbar`: Adds a scrollbar to the list, allowing for scrolling if content exceeds screen size.
+
+4. `StyledImage.asset`: Displays an image from the app's assets.
+
+5. `StyledText`: Renders text with various predefined styles. Modifiers like `.twoXl`, `.strong`, and `.display` adjust the text appearance.
+
+6. `StyledDivider`: Creates a horizontal line to visually separate content.
+
+7. `StyledButton`: A customizable button component. The `.strong` variant creates a more prominent button.
+
+Now, let's customize the overall style of your app. Open `example/lib/presentation/style.dart` and modify the `style` variable:
+
+```dart filename="example/lib/presentation/style.dart"
+final style = FlatStyle(
+  primaryColor: Color(0xff2d77bb), // Change to whatever you would like.
+  backgroundColor: Color(0xff0B0F14), // Change to whatever you would like.
+);
+```
+
+Once you hot-restart the app, you'll notice that the login page's colors adapt to the style. It is difficult to validate your style using the login page alone. With the `/_styleguide` page, you can easily see how your style looks across a variety of contexts.
+
+![Styleguide](/guides/user-authentication/styleguide-page.png)
+
+### Login Port
+
+Now that we have the basic structure of our login page, let's implement the email and password input fields along with a login button. To do this efficiently, we'll use Flood's [Port Module](/port).
+
+A `Port` is a powerful tool for creating and managing forms in Flood. It allows you to define a set of fields with specific types, validation rules, and display properties. One of the great features of Ports is that they can automatically generate UI components for each field, complete with built-in validation during form submission. This saves you time and ensures consistency in your forms.
+
+Let's create a login port with email and password fields:
+
+```dart filename="example/lib/presentation/pages/login_page.dart" {3,10-13}
+import 'package:flood/flood.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+
+...
+
+class LoginPage with IsAppPage<LoginRoute> {
+  @override
+  Widget onBuild(BuildContext context, LoginRoute route) {
+    final loginPort = useMemoized(() => Port.of({
+          'email': PortField.string().withDisplayName('Email').isNotBlank().isEmail(),
+          'password': PortField.string().withDisplayName('Password').isNotBlank().isPassword(),
+        }));
+
+    ...
+  }
+}
+
+```
+
+Let's break down what each field in this `loginPort` does:
+
+1. `'email'`: This creates a string field for the user's email address.
+
+-   `.withDisplayName('Email')`: Sets the label for this field to "Email".
+-   `.isNotBlank()`: Ensures that the field cannot be left empty.
+-   `.isEmail()`: Validates that the input is in a valid email format and uses an email text input.
+
+2. `'password'`: This creates a string field for the user's password.
+
+-   `.withDisplayName('Password')`: Sets the label for this field to "Password".
+-   `.isNotBlank()`: Ensures that the field cannot be left empty.
+-   `.isPassword()`: Applies password-specific validation and obscures the input.
+
+By defining these fields in a `Port`, we not only set up the data structure for our login form but also prepare it for automatic UI generation and validation, which we'll use in the next step.
+
+### Auto-generating UI for Login Port
+
+To render our login form, we'll use the `StyledObjectPortBuilder` widget. This powerful component takes a Port as input and automatically generates a corresponding edit widget for each field defined in the Port.
+
+```dart filename="example/lib/presentation/pages/login_page.dart" {13}
+...
+return StyledPage(
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.all(4),
+          child: StyledList.column.centered.withScrollbar(
+            children: [
+              StyledImage.asset('assets/logo_foreground.png', width: 200, height: 200),
+              StyledText.twoXl.strong.display('Welcome to Todo'),
+              StyledText.body.display('Turning Chaos into Checked Boxes'),
+              StyledDivider(),
+              StyledObjectPortBuilder(port: loginPort),
+              StyledList.row.centered.withScrollbar(
+                children: [
+                  StyledButton(
+                    labelText: 'Login',
+                    onPressed: () async {
+                      // TODO Login and navigate to the home page.
+                    },
+                  ),
+                  StyledButton.strong(
+                    labelText: 'Sign Up',
+                    onPressed: () async {
+                      // TODO Navigate to the sign up page.
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+...
+```
+
+![Login Page with fields](/guides/user-authentication/field-login-page.png)
+
+As you can see, the email and password fields are automatically rendered with appropriate labels. The email field is configured to use an email-specific keyboard layout, while the password field obscures the input for security. This automatic UI generation saves development time and ensures a consistent user experience.
+
+### Validating Ports
+
+With our `loginPort` rendered, let's implement the `onPressed` functionality for the Login button. This function will validate the `loginPort` and use its values to authenticate the user.
+
+The beauty of using `Port`s is that validation is built-in. If any fields are empty or if the email field doesn't contain a valid email address, the `Port` will automatically display error messages beneath the relevant fields and prevent the login process from proceeding. This ensures that only valid data is submitted, improving the user experience and reducing potential errors.
+
+Let's implement this functionality:
+
+```dart filename="example/lib/presentation/pages/login_page.dart" {5-9}
+...
+StyledButton(
+  labelText: 'Login',
+  onPressed: () async {
+    final result = await loginPort.submit();
+    if (!result.isValid) {
+      return;
+    }
+    print(result.data);
+  },
+),
+...
+```
+
+When you press the login button, the Port will validate the entered information. If all fields are valid, the form will proceed. However, if any field contains invalid data, an error message will appear below the corresponding field, guiding the user to correct their input.
+
+![Login Page with errors](/guides/user-authentication/field-login-page-errors.png)
+
+### Logging In
+
+Now that we can capture and validate user input, let's implement the actual login functionality. However, we face a small challenge: we haven't created any user accounts yet! To solve this, we'll use the [Testing Module](/testing) to create a mock account when the app starts.
+
+Add the following method to `example/lib/main.dart` inside the `_setupTesting` function:
+
+```dart filename="example/lib/main.dart" {4-5}
+...
+
+Future<void> _setupTesting(CorePondContext corePondContext) async {
+  await corePondContext.authCoreComponent
+      .createAccount(AuthCredentials.email(email: 'test@test.com', password: 'password'));
+}
+```
+
+This creates a test account we can use to log in whenever the app starts in the `testing` environment. After adding this, hot-restart the app and navigate back to the `/login` page.
+
+Now, let's update the Login button to attempt authentication using the credentials from `loginPort`:
+
+```dart filename="example/lib/presentation/pages/login_page.dart" {10-13}
+...
+StyledButton(
+  labelText: 'Login',
+  onPressed: () async {
+    final result = await loginPort.submit();
+    if (!result.isValid) {
+      return;
+    }
+
+    final data = result.data;
+
+    final account = await context.authCoreComponent
+        .login(AuthCredentials.email(email: data['email'], password: data['password']));
+
+    print('Logged in: $account');
+  },
+),
+...
+```
+
+If the login is successful, you'll see the account information printed in the console, confirming that the user has been authenticated. Try logging in with an email of `test@test.com` and a password of `password`.
+
+### Error Handling
+
+When incorrect credentials are entered and the Login button is pressed, the `login` function throws an error. Without proper error handling, this leads to an unresponsive Login button and no visible error messages for the user, creating a poor user experience.
+
+To address this, we'll implement a try/catch statement around our login functionality. The `login` function throws a `LoginFailure` when authentication fails, which includes a `displayText` field we can use to inform the user. We'll update our code to display this error message in the email field and use the [Logs Module](/logs) to record detailed error information for debugging purposes.
+
+Here's the updated code:
+
+```dart filename="example/lib/presentation/pages/login_page.dart" {7-15}
+...
+final result = await loginPort.submit();
+if (!result.isValid) {
+  return;
+}
+final data = result.data;
+try {
+  final account = await context.authCoreComponent
+      .login(AuthCredentials.email(email: data['email'], password: data['password']));
+  print('Logged in: $account');
+} catch (e, stackTrace) {
+  final errorText = e.as<LoginFailure>()?.displayText ?? e.toString();
+  loginPort.setError(path: 'email', error: errorText);
+  context.logError(e, stackTrace);
+}
+...
+```
+
+Let's break down the key parts of this error handling:
+
+-   `.as<LoginFailure>()` attempts to cast the exception to a `LoginFailure`. If successful, it returns the `LoginFailure`; otherwise, it returns `null`.
+-   `loginPort.setError` sets an error message for the 'email' field, displaying it to the user.
+-   `context.logError` utilizes the Logs Module to record the error and stack trace in the console for debugging.
+
+With this implementation, attempting to log in with invalid credentials or when already logged in will display an informative error message below the Email field. This allows users to understand the issue and try again, significantly improving the user experience.
+
+![Login Page with a login error](/guides/user-authentication/field-login-page-auth-error.png)
+
+## Signup Page
+
+An authentication workflow is incomplete without the ability to sign up. Let's create a Signup Page, enable user navigation to it, implement account creation, and handle any errors that may occur during the process.
+
+### Creating the SignupRoute and SignupPage
+
+Create a new file `example/lib/presentation/signup_page.dart` with a structure similar to the login page, but using `SignupRoute` and `SignupPage`:
+
+```dart filename="example/lib/presentation/pages/signup_page.dart"
+import 'package:flood/flood.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+
+class SignupRoute with IsRoute<SignupRoute> {
+  @override
+  PathDefinition get pathDefinition => PathDefinition.string('signup');
+
+  @override
+  SignupRoute copy() {
+    return SignupRoute();
+  }
+}
+
+class SignupPage with IsAppPage<SignupRoute> {
+  @override
+  Widget onBuild(BuildContext context, SignupRoute route) {
+    final signupPort = useMemoized(() => Port.of({
+          'email': PortField.string().withDisplayName('Email').isNotBlank().isEmail(),
+          'password': PortField.string().withDisplayName('Password').isNotBlank().isPassword(),
+          'confirmPassword': PortField.string()
+              .withDisplayName('Confirm Password')
+              .isNotBlank()
+              .isConfirmPassword(passwordField: 'password'),
+        }));
+
+    return StyledPage(
+      titleText: 'Signup',
+      body: StyledList.column.centered.withScrollbar(
+        children: [
+          StyledCard(
+            titleText: 'Info',
+            bodyText: 'Fill in your information to get started!',
+            leadingIcon: Icons.person,
+            children: [
+              StyledObjectPortBuilder(port: signupPort),
+            ],
+          ),
+          StyledButton.strong(
+            labelText: 'Sign Up',
+            onPressed: () async {
+              final result = await signupPort.submit();
+              if (!result.isValid) {
+                return;
+              }
+
+              final data = result.data;
+
+              try {
+                final account = await context.authCoreComponent
+                    .signup(AuthCredentials.email(email: data['email'], password: data['password']));
+                print('Signed Up: $account');
+              } catch (e, stackTrace) {
+                final errorText = e.as<SignupFailure>()?.displayText ?? e.toString();
+                signupPort.setError(path: 'email', error: errorText);
+                context.logError(e, stackTrace);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+Key differences between the `LoginRoute`/`LoginPage` and `SignupRoute`/`SignupPage`:
+
+1. The `SignupRoute` uses `signup` instead of `login` in its `pathDefinition`.
+2. The `signupPort` includes a new `confirmPassword` field, which is validated against the `password` field during submission.
+3. `SignupPage` utilizes a `StyledCard`, a `StyledComponent` that conveniently wraps children and provides properties for titles and icons.
+4. Instead of `context.authCoreComponent.login`, it uses `context.authCoreComponent.signup` to create a new account and sign in the user.
+5. Error handling checks for `SignupFailure` instead of `LoginFailure`, as `authCoreComponent.signup` produces `SignupFailures` when errors occur.
+
+### Page and Route Registration
+
+Don't forget to register the signup page in `pages_pond_component.dart`:
+
+```dart filename="example/lib/presentation/pages_pond_component.dart" {5}
+...
+Map<Route, AppPage> get pages => {
+  HomeRoute(): HomePage(),
+  LoginRoute(): LoginPage(),
+  SignupRoute(): SignupPage(),
+};
+...
+```
+
+After a hot-restart, you can use the Url Bar Module to navigate to `/signup` and verify that the signup process works and error handling is properly implemented.
+
+![Signup Page](/guides/user-authentication/signup-page.png)
+
+## Navigation
+
+Now that we have implemented login and signup functionality, let's set up proper [navigation](/pond/app/navigation) between our pages. We'll ensure users are directed to the right place after authentication and implement route guards for protected pages.
+
+### Post-Login Navigation
+
+After a successful login in the `LoginPage`, users expect to be routed to the `HomePage`. Let's add that functionality:
+
+```dart filename="example/lib/presentation/pages/login_page.dart" {7}
+...
+try {
+  final account = await context.authCoreComponent
+      .login(AuthCredentials.email(email: data['email'], password: data['password']));
+  print('Logged in: $account');
+
+  context.warpTo(HomeRoute());
+} catch (e, stackTrace) {
+  ...
+}
+...
+```
+
+`context.warpTo` replaces the entire navigation stack with the provided route. In this case, after a successful login, the user will be taken to the `HomeRoute` without the option to go back to the previous page.
+
+### Sign Up Navigation
+
+Now, let's add functionality to navigate to the `SignupRoute` when users press the "Sign Up" button in the `LoginPage`:
+
+```dart filename="example/lib/presentation/pages/login_page.dart" {5}
+...
+StyledButton.strong(
+  labelText: 'Sign Up',
+  onPressed: () async {
+    context.push(SignupRoute());
+  },
+),
+...
+```
+
+`context.push` adds a new route to the navigation stack. When users press the "Sign Up" button, they'll be taken to the `SignupRoute` with the option to go back to the `LoginPage`.
+
+### Post-Signup Navigation
+
+In the `SignupPage`, let's direct users to the `HomeRoute` after successful account creation:
+
+```dart filename="example/lib/presentation/pages/signup_page.dart" {7}
+...
+try {
+  final account = await context.authCoreComponent
+      .signup(AuthCredentials.email(email: data['email'], password: data['password']));
+  print('Signed Up: $account');
+
+  context.warpTo(HomeRoute());
+} catch (e, stackTrace) {
+  ...
+}
+...
+```
+
+## Home Page
+
+### Adding a Basic Route Guard
+
+To protect the `HomePage` from unauthorized access, we'll add a redirect that checks the user's authentication status:
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {3, 7, 9-15}
+import 'package:flutter/material.dart';
+import 'package:flood/flood.dart';
+import 'package:template/presentation/pages/login_page.dart';
+
+...
+
+class HomePage with IsAppPageWrapper<HomeRoute> {
+  @override
+  AppPage<HomeRoute> get appPage => AppPage<HomeRoute>().withRedirect((context, route) async {
+        final loggedInUserId = context.authCoreComponent.loggedInUserId;
+        if (loggedInUserId == null) {
+          return LoginRoute().routeData;
+        }
+        return null;
+      });
+
+  ...
+}
+```
+
+This redirect checks if a user is logged in and redirects to the `LoginRoute` if not. We use `AppPageWrapper` to leverage [composition](/core-concepts/composition), making it easier to chain multiple redirects or create reusable security patterns. For more advanced techniques, check out the [Navigation & Route Security Guide](/navigation-and-route-security).
+
+### Displaying User ID
+
+Let's display the logged-in user's ID on the `HomePage`:
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {4,9}
+...
+@override
+Widget onBuild(BuildContext context, HomeRoute route) {
+  final loggedInUserId = useLoggedInUserIdOrNull();
+  return StyledPage(
+    titleText: 'Hello',
+    body: StyledList.column.withScrollbar(
+      children: [
+        StyledText.body(loggedInUserId ?? 'N/A'),
+      ],
+    ),
+  );
+}
+...
+```
+
+`useLoggedInUserIdOrNull()` returns the currently logged-in user's ID (or `null` if not logged in) and updates the page whenever the authentication status changes.
+
+With these changes, you've implemented secure navigation and basic authentication checks in your Flood app. Users will be properly directed after login or signup, and the `HomePage` is now protected from unauthorized access.
+
+### Logout Functionality
+
+Now, let's add a logout option to our Home Page. We'll use an `ActionItem` to create a menu option for logging out.
+
+Update your `HomePage` in `example/lib/presentation/pages/home_page.dart`:
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {6-16}
+@override
+Widget onBuild(BuildContext context, HomeRoute route) {
+  final loggedInUserId = useLoggedInUserIdOrNull();
+  return StyledPage(
+    titleText: 'Home',
+    actions: [
+      ActionItem(
+        titleText: 'Log Out',
+        descriptionText: 'Log out of your account',
+        iconData: Icons.logout,
+        onPerform: (context) async {
+          await context.authCoreComponent.logout();
+          context.warpTo(LoginRoute());
+        },
+      ),
+    ],
+    body: StyledList.column.withScrollbar(
+      children: [
+        StyledText.body(loggedInUserId ?? 'N/A'),
+      ],
+    ),
+  );
+}
+```
+
+Let's break down what we've added:
+
+1. We've included an `actions` parameter in the `StyledPage` widget.
+2. Inside `actions`, we've defined an `ActionItem` for signing out.
+3. The `ActionItem` includes a title, description, and icon for the sign-out action.
+4. In the `onPerform` callback, we:
+
+    - Call `context.authCoreComponent.logout()` to sign the user out.
+    - Use `context.warpTo(LoginRoute())` to navigate back to the login page, replacing the entire navigation stack.
+
+This setup creates a menu in the top-right corner of the Home Page. When the user taps this menu and selects "Sign Out", they will be logged out and redirected to the Login Page.
+
+## Forgot Password Page
+
+To complete our authentication workflow, let's implement a Forgot Password feature. This will allow users to reset their password if they've forgotten it.
+
+### Creating the ForgotPasswordRoute and ForgotPasswordPage
+
+Create a new file `example/lib/presentation/pages/forgot_password_page.dart` with the following content:
+
+```dart filename="example/lib/presentation/pages/forgot_password_page.dart"
+import 'package:flood/flood.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+
+class ForgotPasswordRoute with IsRoute<ForgotPasswordRoute> {
+  @override
+  PathDefinition get pathDefinition => PathDefinition.string('forgot-password');
+
+  @override
+  ForgotPasswordRoute copy() => ForgotPasswordRoute();
+}
+
+class ForgotPasswordPage with IsAppPage<ForgotPasswordRoute> {
+  @override
+  Widget onBuild(BuildContext context, ForgotPasswordRoute route) {
+    final emailPort = useMemoized(() => Port.of({
+      'email': PortField.string().withDisplayName('Email').isNotBlank().isEmail(),
+    }).map((values, port) => values['email'] as String));
+
+    return StyledPage(
+      titleText: 'Forgot Password',
+      body: StyledList.column.centered.withScrollbar(
+        children: [
+          StyledCard(
+            titleText: 'Reset Password',
+            bodyText: 'Enter your email address to reset your password.',
+            leadingIcon: Icons.lock_reset,
+            children: [
+              StyledObjectPortBuilder(port: emailPort),
+            ],
+          ),
+          StyledButton.strong(
+            labelText: 'Send Reset Email',
+            onPressed: () async {
+              final result = await emailPort.submit();
+              if (!result.isValid) {
+                return;
+              }
+
+              final email = result.data; // This is a String due to the way we defined the Port.
+
+              try {
+                await context.authCoreComponent.resetPassword(email);
+                context.showStyledMessage(StyledMessage(
+                  labelText: 'Reset email sent. Check your inbox!',
+                ));
+              } catch (error, stackTrace) {
+                context.showStyledMessage(StyledMessage.error(labelText: error.toString()));
+                context.logError(error, stackTrace);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+Let's break down the key elements of this page:
+
+1. We define a `ForgotPasswordRoute` with the path `/forgot-password`.
+2. The `emailPort` is a simple Port with just an email field. We use `.map()` to transform the Port's result into just the email string.
+3. We use `StyledCard` to create a visually appealing container for our form.
+4. The "Send Reset Email" button triggers the password reset process.
+5. We use `context.authCoreComponent.resetPassword()` to initiate the password reset.
+6. On success, we show a message to the user using `context.showStyledMessage()`.
+7. On an error, we show an error message to the user using `context.showStyledMessage()`.
+
+### Page and Route Registration
+
+Don't forget to register the forgot password page in `pages_pond_component.dart`:
+
+```dart filename="example/lib/presentation/pages_pond_component.dart" {6}
+...
+Map<Route, AppPage> get pages => {
+  HomeRoute(): HomePage(),
+  LoginRoute(): LoginPage(),
+  SignupRoute(): SignupPage(),
+  ForgotPasswordRoute(): ForgotPasswordPage(),
+};
+...
+```
+
+### Navigation to Forgot Password Page
+
+Now, let's add a link to the Forgot Password page from our Login page. Update your `LoginPage` in `example/lib/presentation/pages/login_page.dart`:
+
+```dart filename="example/lib/presentation/pages/login_page.dart" {8-14}
+...
+StyledObjectPortBuilder(port: loginPort),
+StyledList.row.centered.withScrollbar(
+  children: [
+      // login and signup buttons
+  ],
+),
+StyledButton.subtle(
+  labelText: 'Forgot Password?',
+  isTextButton: true,
+  onPressed: () {
+    context.push(ForgotPasswordRoute());
+  },
+),
+...
+```
+
+Notice that we used `isTextButton: true`, meaning that the button is rendered without any borders.
+
+![Completed Login Page](/guides/user-authentication/completed-login-page.png)
+
+### Testing the Forgot Password Feature
+
+After implementing these changes, hot-restart your app and navigate to the Login page. You should now see a "Forgot Password?" button. Clicking it will take you to the Forgot Password page where you can enter an email address to reset the password.
+
+Remember, since we're in the `testing` environment, no actual email will be sent. Instead, the new password will be printed to the console. In a production environment, this would trigger an email to be sent to the user with instructions on how to reset their password.
+
+![Forgot Password Page](/guides/user-authentication/forgot-password-page.png)
+
+With these additions, you've completed a full authentication flow including login, signup, and password reset functionality! Now that you have user management in place, you're ready to start working with user-specific data. Continue your learning journey by following the [Working with Data](/working-with-data) guide to learn how to manage data for users and todos.

@@ -1,0 +1,394 @@
+# Using Assets
+
+In this guide, we'll explore how to effectively use assets in your Flood project. We'll cover adding profile pictures for users and attaching assets to todos, demonstrating how to securely manage and display these assets in your application.
+
+## Before You Begin
+
+This guide builds upon the concepts and implementations from previous guides, particularly the [Data Security](/data-security) guide. If you haven't completed the previous guides, you can start with the repository that ended off at the last guide by cloning https://github.com/JLogical-Apps/flood-template/tree/data-security.
+
+## Asset Providers
+
+The [Asset Module](/asset) in Flood uses `AssetProvider`s to define how to retrieve and upload assets. An `AssetProvider` specifies the asset source (such as memory, device, or cloud), the path in that asset source, asset security, and caching policies.
+
+Let's define `AssetProvider`s for our todos and user profile pictures:
+
+1. In `example_core/lib/features/todo/todo.dart`, add the following:
+
+    ```dart filename="example_core/lib/features/todo/todo.dart"
+    ...
+
+    class TodoAssetProvider with IsAssetProviderWrapper {
+      final AssetCoreComponent context;
+
+      TodoAssetProvider(this.context);
+
+      @override
+      late final AssetProvider assetProvider = AssetProvider.static
+          .adapting(context, (context) => 'todos/${context.entityId}/assets')
+          .fromRepository<TodoEntity>(context);
+    }
+    ```
+
+    Let's go through each part:
+
+    - `.adapting(...)`: Chooses the appropriate storage (memory, device, or cloud) based on the current [environment](/environment).
+    - `'todos/${context.entityId}/assets'`: Defines the storage path, organizing assets by todo ID.
+    - `.fromRepository<TodoEntity>(context)`: Inherits security rules from the `TodoEntity` repository. This means that if a user has permission to read a `TodoEntity`, they'll also have permission to read its associated assets. Similarly, if a user can update a `TodoEntity`, they can also add or remove assets for that todo.
+
+2. In `example_core/lib/features/user/user.dart`, add:
+
+    ```dart filename="example_core/lib/features/user/user.dart"
+    ...
+
+    class UserProfilePictureAssetProvider with IsAssetProviderWrapper {
+      final AssetCoreComponent context;
+
+      UserProfilePictureAssetProvider(this.context);
+
+      @override
+      late final AssetProvider assetProvider = AssetProvider.static
+          .adapting(context, (context) => 'users/${context.entityId}/profilePicture')
+          .fromRepository<UserEntity>(context);
+    }
+    ```
+
+    The key differences are:
+
+    - The path is `'users/${context.entityId}/profilePicture'`, which stores the profile picture in a folder specific to each user.
+    - It's linked to the `UserEntity` repository, inheriting its security rules.
+
+To register these `AssetProvider`s, update the `FloodCoreComponent` in `example_core/lib/pond.dart`:
+
+```dart filename="example_core/lib/pond.dart"
+...
+FloodCoreComponent(
+  ...
+  assetProviders: (context) => [
+    UserProfilePictureAssetProvider(context),
+    TodoAssetProvider(context),
+  ],
+)
+```
+
+## Asset Security
+
+Just like with repository security, the `.fromRepository` method only enforces security on the device. To protect your assets on the server-side, you need to generate and upload security rules to Firebase. Run the following command to generate asset security rules and deploy them automatically:
+
+```bash
+dart tool/automate.dart deploy production
+```
+
+This command will use the [Ops Module](/automate/ops) to generate and deploy the appropriate security rules for your assets.
+
+## Initialization
+
+To enable asset management in your Flood project, we need to make a few adjustments to our existing setup:
+
+1. Flood uses the [image_picker](https://pub.dev/packages/image_picker) package to allow users to upload and take photos for asset fields. Follow the installation process for the platforms you're planning to support (Android and iOS).
+
+2. We need to add Firebase Storage as the implementation for cloud asset providers. First, let's modify the `getCorePondContext` function in `example_core/lib/pond.dart` to include the `assetProviderImplementations` parameter:
+
+    ```dart filename="example_core/lib/pond.dart" {3}
+    Future<CorePondContext> getCorePondContext({
+      ...
+      List<AssetProviderImplementation> Function(CorePondContext context)? assetProviderImplementations,
+      ...
+    }) async {
+      ...
+    }
+    ```
+
+3. Now, update the `FloodCoreComponent` initialization in the same file to include the `assetProviderImplementations`:
+
+    ```dart filename="example_core/lib/pond.dart" {5}
+    ...
+    final corePondContext = CorePondContext();
+    await corePondContext.register(FloodCoreComponent(
+      ...
+      assetProviderImplementations: assetProviderImplementations,
+    ));
+    ...
+    ```
+
+4. Finally, in `example/lib/main.dart`, pass the Firebase Storage AssetProvider Implementation in `getCorePondContext`:
+
+    ```dart filename="example/lib/main.dart" {4-6}
+    ...
+    final corePondContext = await getCorePondContext(
+     ...
+     assetProviderImplementations: (context) => [
+       FirebaseStorageAssetProviderImplementation(),
+     ],
+    );
+    ...
+    ```
+
+These modifications ensure that your Flood project is properly set up to handle assets, including the ability to use Firebase Storage for cloud asset management when in the `production` environment.
+
+## Adding Assets to ValueObjects
+
+Now that we've set up our `AssetProvider`s, let's add asset fields to our `User` and `Todo` `ValueObject`s.
+
+Update the `User` class in `example_core/lib/features/user/user.dart`:
+
+```dart filename="example_core/lib/features/user/user.dart" {5-11,16}
+...
+class User extends ValueObject {
+  ...
+
+  static const profilePictureField = 'profilePicture';
+  late final profilePictureProperty = field<String>(name: profilePictureField)
+      .asset(
+        assetProvider: (context) => context.locate<UserProfilePictureAssetProvider>(),
+        allowedFileTypes: AllowedFileTypes.image,
+      )
+      .withDisplayName('Profile Picture');
+
+  @override
+  late final List<ValueObjectBehavior> behaviors = [
+    ...
+    profilePictureProperty,
+  ];
+}
+```
+
+Update the `Todo` class in `example_core/lib/features/todo/todo.dart`:
+
+```dart filename="example_core/lib/features/todo/todo.dart" {5-9,14}
+...
+class Todo extends ValueObject {
+  ...
+
+  static const assetsField = 'assets';
+  late final assetsProperty = field<String>(name: assetsField)
+      .asset(assetProvider: (context) => context.locate<TodoAssetProvider>())
+      .list()
+      .withDisplayName('Assets');
+
+  @override
+  late final List<ValueObjectBehavior> behaviors = [
+    ...
+    assetsProperty,
+  ];
+}
+```
+
+These new fields allow users to attach a profile picture to their account and multiple assets to each todo. The `profilePictureProperty` is restricted to images, while `assetsProperty` allows any file type.
+
+## Understanding and Validating Asset Functionality
+
+Now that we've added asset fields to our `User` and `Todo` ValueObjects, let's explore what this enables and how to verify it's working correctly.
+
+### Automatic Asset Management in Ports
+
+By adding these asset fields, we've enabled automatic asset management in the corresponding Ports. This means:
+
+1. For `User` entities:
+
+-   When editing a `User` through a Port, there will be a field for the profile picture.
+-   Users can upload a new profile picture or delete the existing one directly from this field.
+
+2. For `Todo` entities:
+
+-   When creating or editing a `Todo` through a Port, there will be a field for assets.
+-   Users can add multiple assets to a todo, delete existing assets, or replace them with new ones.
+
+This integration is automatic - you don't need to write any additional code to handle asset uploads or deletions when editing these entities. The [Port Module](/port) generates the appropriate UI for asset management, and asset changes are automatically handled and persisted when the Port is submitted.
+
+### Validating Asset Upload Functionality
+
+Let's verify that this new functionality is working correctly:
+
+1. Restart your app to ensure all changes are applied.
+2. Navigate to the home page and create a new todo by clicking the "Create Todo" button.
+3. In the todo creation dialog, you should now see a new "Assets" field. This field allows you to add multiple assets to your todo.
+4. Click on the "+ Add" button in the Assets field. This should open the asset picker.
+5. Select an image or take a photo to add as an asset to your todo.
+6. Complete the todo creation process by filling in the other fields and saving the todo.
+7. Although you won't see the assets in the todo cards on the home page yet (we'll implement that display later), you can verify that the assets were successfully saved by editing the todo you just created.
+8. When you open the edit dialog for the todo, you should see the assets you previously added in the Assets field.
+
+This process confirms that:
+
+-   The new Assets field is correctly added to the Todo Port.
+-   Assets can be successfully uploaded and associated with a todo.
+-   The uploaded assets persist even after restarting the app (if in an environment other than `testing`)
+-   You can manage (add, delete, replace) assets directly through the Port interface.
+
+![Upload Assets to a Todo](/guides/using-assets/todo-upload-assets.png)
+
+## Displaying Assets
+
+Now that we can add assets to todos, let's display them on the home page. We'll update our `HomePage` to show the assets associated with each todo, and we'll explore how to customize their appearance.
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {5-12}
+...
+.map((todoEntity) => StyledCard(
+  titleText: todoEntity.value.nameProperty.value,
+  ...
+  children: [
+    if (todoEntity.value.assetsProperty.value.isNotEmpty)
+      StyledList.row.withScrollbar(
+        children: todoEntity.value.assetsProperty.value
+            .map((asset) => StyledAssetProperty(assetProperty: asset, height: 80))
+            .toList(),
+      ),
+  ],
+))
+...
+```
+
+This code adds a horizontal scrollable list of assets below each todo item if it has any attached assets. The `StyledAssetProperty` widget is used to display each asset.
+
+Note that `StyledAssetProperty` offers additional customization options:
+
+-   You can specify a `width` in addition to `height` to control the size of the asset display.
+-   The `fit` property allows you to control how the asset is scaled within its display area. This property accepts a `BoxFit` enum, which provides various scaling options. For more details on `BoxFit`, refer to the [Flutter documentation](https://api.flutter.dev/flutter/painting/BoxFit.html).
+
+These options allow you to fine-tune the appearance of assets in your UI to best suit your app's design.
+
+Remember, `StyledAssetProperty` automatically handles different types of assets, including images and videos.
+
+## User Profile Picture
+
+Let's add the ability for users to set and view their profile picture. We'll replace the menu button on the top-right of the home page with a profile icon that displays the user's picture and provides options to manage it.
+
+Update the `HomePage` class in `example/lib/presentation/pages/home_page.dart`:
+
+```dart filename="example/lib/presentation/pages/home_page.dart" {8,13-69}
+...
+class HomePage with IsAppPageWrapper<HomeRoute> {
+  ...
+
+  @override
+  Widget onBuild(BuildContext context, HomeRoute route) {
+    final loggedInUserId = useLoggedInUserIdOrNull();
+    final userModel = useEntityOrNull<UserEntity>(loggedInUserId);
+    final todosModel = useQuery(getTodosQuery(loggedInUserId, route.onlyCompletedProperty.value));
+
+    return StyledPage(
+      titleText: 'Home',
+      actionWidgets: [
+        ModelBuilder(
+          model: userModel,
+          builder: (UserEntity? userEntity) {
+            return StyledContainer(
+              width: 40,
+              height: 40,
+              shape: CircleBorder(),
+              child: userEntity?.value.profilePictureProperty.value != null
+                  ? StyledAssetProperty(
+                      assetProperty: userEntity!.value.profilePictureProperty.value!,
+                      fit: BoxFit.cover,
+                    )
+                  : StyledIcon(Icons.person),
+              onPressed: () async {
+                await context.showStyledDialog(StyledDialog.actionList(
+                  context: context,
+                  actions: [
+                    ActionItem(
+                      titleText: 'Upload Profile Picture',
+                      descriptionText: 'Upload a profile picture to your account.',
+                      color: Colors.blue,
+                      iconData: Icons.image,
+                      onPerform: (_) async {
+                        final asset = await AssetPicker.select(context, AllowedFileTypes.image);
+                        if (asset != null) {
+                          await userEntity!.value.profilePictureProperty.uploadAsset(context.assetCoreComponent, asset);
+                        }
+                      },
+                    ),
+                    if (userEntity?.value.profilePictureProperty.value != null)
+                      ActionItem(
+                        titleText: 'Remove Profile Picture',
+                        descriptionText: 'Remove your profile picture.',
+                        color: Colors.red,
+                        iconData: Icons.image_not_supported,
+                        onPerform: (_) async {
+                          await userEntity!.value.profilePictureProperty.deleteAsset(context.assetCoreComponent);
+                        },
+                      ),
+                    ActionItem(
+                      titleText: 'Log Out',
+                      descriptionText: 'Log out of your account',
+                      iconData: Icons.logout,
+                      color: Colors.red,
+                      onPerform: (context) async {
+                        await context.authCoreComponent.logout();
+                        context.warpTo(LoginRoute());
+                      },
+                    ),
+                  ],
+                ));
+              },
+            );
+          },
+        )
+      ],
+      body: ...
+    );
+  }
+
+  ...
+}
+```
+
+This implementation demonstrates manual asset upload and deletion:
+
+1. **Upload Profile Picture**:
+
+-   Uses `AssetPicker.select()` to allow the user to choose an image.
+-   Calls `uploadAsset()` on the `profilePictureProperty` to upload the selected asset.
+
+2. **Remove Profile Picture**:
+
+-   Only shown if a profile picture exists.
+-   Calls `deleteAsset()` on the `profilePictureProperty` to remove the current profile picture.
+
+These methods provide direct control over asset management, allowing you to handle specific scenarios or add custom logic around asset uploads and deletions.
+
+![Profile Icon](/guides/using-assets/profile-icon.png)
+
+Note: An alternative approach using Ports could look like this:
+
+```dart
+ActionItem(
+  titleText: 'Edit Profile Picture',
+  descriptionText: 'Edit your profile picture.',
+  color: Colors.orange,
+  iconData: Icons.face,
+  onPerform: (_) async {
+    await context.showStyledDialog(StyledPortDialog(
+      titleText: 'Edit Profile Picture',
+      port: userEntity!.value.asPort(context.corePondContext, only: [User.profilePictureField]),
+      onAccept: (User user) async {
+        await context.dropCoreComponent.updateEntity(userEntity..set(user));
+      },
+    ));
+  },
+),
+```
+
+![Edit Profile Picture Port](/guides/using-assets/edit-profile-picture-port.png)
+
+This Port-based approach automatically generates a UI for managing the profile picture, including upload and delete functionality. It's more concise and leverages Flood's built-in Port system, but may offer less granular control over the upload/delete process compared to the manual approach.
+
+Both methods are valid, and the choice between them depends on your specific requirements and desired level of control over the asset management process.
+
+## Asset Lifecycle
+
+The Asset Module in Flood automatically manages the lifecycle of assets:
+
+-   When an asset is uploaded to a ValueObject, it's stored in the AssetProvider, and the asset's ID is assigned to the asset field of the ValueObject.
+-   If an asset is replaced, the new asset is uploaded, the old asset is deleted, and the new asset's ID is used in the field.
+-   When an entity with asset fields is deleted, all associated assets are automatically deleted as well.
+
+This automatic management ensures that your asset storage remains clean and efficient.
+
+## Next Steps
+
+Congratulations! You've successfully implemented asset management in your Flood application. Users can now add profile pictures and attach assets to their todos.
+
+For additional practice, you could enhance the `TodoDetailsPage` to display a list of assets associated with each todo.
+
+Now that we've added and secured assets in our todo app, the next step is to learn how to automate the release process for our app. Continue to the [Releasing Your App](/releasing-your-app) guide to learn how to automatically release your app to the Play Store, TestFlight, and the web.

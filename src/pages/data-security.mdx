@@ -1,0 +1,290 @@
+import { Callout } from 'nextra/components';
+
+# Data Security
+
+In this guide, we'll explore how to implement and manage data security in your Flood application. We'll cover repository security, user permissions, and how to create admin users in Firebase. By the end of this guide, you'll have a robust security system in place to protect your application's data.
+
+## Before You Begin
+
+This guide builds upon the concepts and implementations from previous guides, particularly the [Cloud Environments](/cloud-environments) guide. If you haven't completed the previous guides, you can start with the repository that ended off at the last guide by cloning https://github.com/JLogical-Apps/flood-template/tree/cloud-environments.
+
+## Repository Security
+
+The [Drop Module](/drop) in Flood provides a powerful way to implement security rules for your repositories. Let's add security to our user and todo repositories to prevent unauthorized access to data.
+
+### Adding Security to Repositories
+
+To add security to a repository, use the `withSecurity` modifier and provide a `RepositorySecurity` object. The `RepositorySecurity` defines the security rules for read, create, update, and delete actions.
+
+Let's update our `TodoRepository` and `UserRepository`:
+
+```dart filename="example_core/lib/features/todo/todo_repository.dart" {9-11}
+...
+class TodoRepository with IsRepositoryWrapper {
+  @override
+  late final repository = Repository.forType<TodoEntity, Todo>(
+    TodoEntity.new,
+    Todo.new,
+    entityTypeName: 'TodoEntity',
+    valueObjectTypeName: 'Todo',
+  ).adapting('todo').withSecurity(RepositorySecurity.all(
+        Permission.equals(PermissionField.propertyName(Todo.ownerField), PermissionField.loggedInUserId)
+      ));
+}
+```
+
+This security rule ensures that users can only access or update todos that they own.
+
+For the `UserRepository`, we'll implement more granular security:
+
+```dart filename="example_core/lib/features/user/user_repository.dart" {9-14}
+...
+class UserRepository with IsRepositoryWrapper {
+  @override
+  late final repository = Repository.forType<UserEntity, User>(
+    UserEntity.new,
+    User.new,
+    entityTypeName: 'UserEntity',
+    valueObjectTypeName: 'User',
+  ).adapting('user').withSecurity(RepositorySecurity(
+        read: Permission.authenticated,
+        create: Permission.equals(PermissionField.loggedInUserId, PermissionField.entityId),
+        update: Permission.equals(PermissionField.loggedInUserId, PermissionField.entityId),
+        delete: Permission.none,
+      ));
+}
+```
+
+This security configuration allows authenticated users to view other users (e.g., for adding friends), but only allows users to update their own user entity. Deleting users is prohibited.
+
+### Local Security Enforcement
+
+It's important to understand that `withSecurity` enforces security rules locally on the device:
+
+-   Checks happen before network requests are made.
+-   Provides immediate feedback in your app.
+-   Useful for testing and development.
+
+However, these local checks don't replace server-side security rules. For production applications, you must implement corresponding security rules on your backend (e.g., Firebase Security Rules) to ensure data security at the server level.
+
+Flood can help generate and deploy server-side security rules based on your local `withSecurity` configurations through the [Ops Module](/automate/ops), which we'll cover later.
+
+By implementing both local and server-side security rules, you create a robust, multi-layered security system for your application.
+
+### Verifying Security Rules
+
+To verify that your security rules are working, you can modify the `_setupTesting` function in `example/lib/main.dart` to attempt creating entities that should be blocked by the security rules:
+
+```dart filename="example/lib/main.dart" {5-17}
+...
+Future<void> _setupTesting(CorePondContext corePondContext) async {
+  ...
+
+  // This should fail due to security rules
+  await corePondContext.dropCoreComponent.updateEntity(UserEntity()
+    ..id = 'notYours'
+    ..set(User()
+      ..nameProperty.set('Not Yours')
+      ..emailProperty.set('notyours@test.com')));
+
+  // Or try this
+  await corePondContext.dropCoreComponent.updateEntity(TodoEntity()
+    ..id = 'notYours'
+    ..set(Todo()
+      ..nameProperty.set('Not yours')
+      ..ownerProperty.set('notYours')));
+}
+```
+
+When you run the app in the testing environment, you should see error messages indicating that these operations were blocked by the security rules.
+
+<Callout type="info">
+    After verifying that the security rules are working as expected, make sure
+    to remove these test modifications from the `_setupTesting` function.
+    Keeping them in place could interfere with your normal testing setup and
+    potentially cause confusion in future development.
+</Callout>
+
+## Ignoring Local Security Checks
+
+Sometimes, you may need to bypass local security checks for administrative or testing purposes. You can do this using the `runWithoutSecurity` method:
+
+```dart filename="example/lib/main.dart" {5-13}
+...
+Future<void> _setupTesting(CorePondContext corePondContext) async {
+  ...
+
+  await corePondContext.dropCoreComponent.runWithoutSecurity(() async {
+    await corePondContext.dropCoreComponent.updateEntity(TodoEntity()
+      ..id='notYours'
+      ..set(
+        Todo()
+          ..nameProperty.set('Not Yours')
+          ..ownerProperty.set('someOtherId'),
+      ));
+  });
+}
+```
+
+This creates a todo that the current user shouldn't have access to. You can verify that the read permissions are working correctly by trying to navigate to `/todo/notYours`. You should see a permission denied error.
+
+## User Permissions
+
+Flood supports fine-grained permissions based on the authentication state of the current user. A user can be in one of three states:
+
+1. Unauthenticated: Not logged in
+2. Authenticated: Logged in
+3. Admin: Logged in and has administrative privileges
+
+### Checking Admin Status
+
+You can check whether the logged-in user is an admin using:
+
+```dart
+final isAdmin = context.authCoreComponent.loggedInAccount?.isAdmin ?? false;
+```
+
+You can use this to enable certain functionality, such as adding an `/admin` page for admins to manage the app.
+
+### Using Admin Status in Permissions
+
+Let's modify our `TodoRepository` to allow admin users to view and modify all todos:
+
+```dart filename="example_core/lib/features/todo/todo_repository.dart" {10}
+...
+class TodoRepository with IsRepositoryWrapper {
+  @override
+  late final repository = Repository.forType<TodoEntity, Todo>(
+    TodoEntity.new,
+    Todo.new,
+    entityTypeName: 'TodoEntity',
+    valueObjectTypeName: 'Todo',
+  ).adapting('todo').withSecurity(RepositorySecurity.all(
+        Permission.admin |
+        Permission.equals(PermissionField.propertyName(Todo.ownerField), PermissionField.loggedInUserId)
+      ));
+}
+```
+
+This security rule allows admin users to access any todo, while non-admin users can only access their own todos.
+
+To test this, you can modify the `memoryIsAdmin` parameter in `example_core/lib/pond.dart`:
+
+```dart filename="example_core/lib/pond.dart" {4}
+...
+await corePondContext.register(FloodCoreComponent(
+  ...
+  authService: (context) => AuthService.static.adapting(memoryIsAdmin: true), // or false
+  ...
+));
+...
+```
+
+With `memoryIsAdmin: true`, you should be able to access `/todo/notYours`. With `memoryIsAdmin: false`, you should see a permission error.
+
+## Creating an Admin User in Firebase
+
+To set a user as an admin in Firebase, we'll use [Firebase Auth Custom Claims](https://firebase.google.com/docs/auth/admin/custom-claims). Follow these steps:
+
+1. Create a [Firebase Function](https://firebase.google.com/docs/functions) to add the `admin` claim to a user:
+
+```typescript filename="example_core/firebase/functions/src/index.ts"
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
+
+admin.initializeApp();
+
+export const addAdminClaim = functions.firestore
+    .document('admin/{adminId}')
+    .onCreate(async (snapshot, context) => {
+        const adminData = snapshot.data();
+        const uid = adminData.uid;
+
+        try {
+            await admin.auth().setCustomUserClaims(uid, { admin: true });
+            console.log(`Admin claim added to user with UID: ${uid}`);
+
+            // Update the document with "complete: true"
+            await snapshot.ref.update({ complete: true });
+            console.log(
+                `Document updated with "complete: true" for UID: ${uid}`
+            );
+        } catch (error) {
+            console.error(
+                `Error adding admin claim to user with UID: ${uid}`,
+                error
+            );
+        }
+    });
+```
+
+2. Deploy the function to Firebase:
+
+```bash
+firebase deploy --only functions
+```
+
+3. In the Firebase console, create a new `admin` document in the Firestore database and set the `uid` field to the account ID of the user you want to set as an admin.
+
+4. Within a few seconds, you should see `complete: true` appear in the document, indicating that the user has been successfully added as an admin.
+
+By implementing these security measures, you've significantly improved the data protection in your Flood application. Remember to regularly review and update your security rules as your application evolves and new features are added.
+
+For more information on Firebase Custom Claims and security best practices, refer to the [Firebase documentation on Custom Claims](https://firebase.google.com/docs/auth/admin/custom-claims).
+
+## Deploying to Firebase
+
+Currently, the security rules we've implemented for our repositories are only enforced on the client-side. This means that a malicious user could potentially bypass these rules and access data they shouldn't be able to. To fully secure our application, we need to implement these security rules on the server-side as well.
+
+### Generating and Deploying Firestore Security Rules
+
+Flood provides an automated way to generate Firestore security rules based on the security configurations we've set up in our repositories. We can then deploy these rules to our Firebase project to ensure server-side enforcement.
+
+To generate and deploy the Firestore security rules:
+
+1. Open a terminal and navigate to your core project directory.
+
+2. Run the following command:
+
+```bash
+dart tool/automate.dart deploy production
+```
+
+This command will:
+
+-   Prompt you to set up a Firebase project if you haven't already.
+-   Generate Firestore security rules based on your repository configurations.
+-   Show you a diff of the changes.
+-   If you accept the changes, it will deploy them to your Firestore project.
+
+<Callout type="info">
+    If you encounter an error when setting up the Firebase project, it might be
+    due to a corrupted `.firebaserc` file. Check the file and ensure the
+    "projects" mapping is correct before proceeding.
+</Callout>
+
+3. Review the generated security rules and confirm the deployment when prompted.
+
+4. Once the deployment is complete, you can verify the new security rules in the Firebase Console under Firestore Database > Rules.
+
+With these server-side security rules in place, your data is now protected even from motivated malicious users who might try to bypass client-side security measures.
+
+### Verifying Server-Side Security
+
+To verify that your server-side security rules are working correctly, you can bypass the client-side security checks and attempt to access or modify data directly. This approach helps ensure that your Firebase security rules are properly enforced, even if a malicious user manages to circumvent client-side security measures. Here's a general process to follow:
+
+1. Temporarily remove the `withSecurity` modifier from your repositories. This disables the client-side security checks, allowing you to simulate a scenario where these checks have been bypassed.
+
+2. With client-side security disabled, attempt to perform operations that should be restricted by your server-side security rules. This might include:
+
+    - Trying to read data that belongs to other users.
+    - Attempting to create or update data with incorrect ownership.
+    - Trying to delete data that you shouldn't have permission to remove.
+
+3. After completing your verification, remember to re-add the `withSecurity` modifier to your repositories to reinstate client-side security checks.
+
+This verification method allows you to confirm that your server-side security rules are functioning as intended, providing an additional layer of protection for your application's data. It's an essential step in ensuring the overall security of your Flood application.
+
+## Next Steps
+
+Now that we've secured our data, let's explore another powerful feature of Flood: Assets. In the [Using Assets](/using-assets) guide, we'll discover how to efficiently manage and use assets within our Flutter projects, further enhancing your application's capabilities.
