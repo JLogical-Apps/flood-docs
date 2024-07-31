@@ -89,7 +89,7 @@ This was heavily inspired by the web, where HTML defines the structure of a page
 
 Let's start by using some `StyledComponent`s to create the login page UI. Update your `LoginPage`:
 
-```dart filename="example/lib/pages/login_page.dart" {4-36}
+```dart filename="example/lib/presentation/pages/login_page.dart" {4-36}
 class LoginPage with IsAppPage<LoginRoute> {
   @override
   Widget onBuild(BuildContext context, LoginRoute route) {
@@ -167,7 +167,7 @@ A `Port` is a powerful tool for creating and managing forms in Flood. It allows 
 
 Let's create a login port with email and password fields:
 
-```dart filename="example/lib/pages/login_page.dart" {3,10-13}
+```dart filename="example/lib/presentation/pages/login_page.dart" {3,10-13}
 import 'package:flood/flood.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -208,7 +208,7 @@ By defining these fields in a `Port`, we not only set up the data structure for 
 
 To render our login form, we'll use the `StyledObjectPortBuilder` widget. This powerful component takes a Port as input and automatically generates a corresponding edit widget for each field defined in the Port.
 
-```dart filename="example/lib/pages/login_page.dart" {13}
+```dart filename="example/lib/presentation/pages/login_page.dart" {13}
 ...
 return StyledPage(
       body: SafeArea(
@@ -258,7 +258,7 @@ The beauty of using `Port`s is that validation is built-in. If any fields are em
 
 Let's implement this functionality:
 
-```dart filename="example/lib/pages/login_page.dart" {5-9}
+```dart filename="example/lib/presentation/pages/login_page.dart" {5-9}
 ...
 StyledButton(
   labelText: 'Login',
@@ -296,7 +296,7 @@ This creates a test account we can use to log in whenever the app starts in the 
 
 Now, let's update the Login button to attempt authentication using the credentials from `loginPort`:
 
-```dart filename="example/lib/pages/login_page.dart" {10-13}
+```dart filename="example/lib/presentation/pages/login_page.dart" {10-13}
 ...
 StyledButton(
   labelText: 'Login',
@@ -327,7 +327,7 @@ To address this, we'll implement a try/catch statement around our login function
 
 Here's the updated code:
 
-```dart filename="example/lib/pages/login_page.dart" {7-15}
+```dart filename="example/lib/presentation/pages/login_page.dart" {7-15}
 ...
 final result = await loginPort.submit();
 if (!result.isValid) {
@@ -364,7 +364,7 @@ An authentication workflow is incomplete without the ability to sign up. Let's c
 
 Create a new file `example/lib/presentation/signup_page.dart` with a structure similar to the login page, but using `SignupRoute` and `SignupPage`:
 
-```dart filename="example/lib/pages/signup_page.dart"
+```dart filename="example/lib/presentation/pages/signup_page.dart"
 import 'package:flood/flood.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -465,7 +465,7 @@ Now that we have implemented login and signup functionality, let's set up proper
 
 After a successful login in the `LoginPage`, users expect to be routed to the `HomePage`. Let's add that functionality:
 
-```dart filename="example/lib/pages/login_page.dart" {7}
+```dart filename="example/lib/presentation/pages/login_page.dart" {7}
 ...
 try {
   final account = await context.authCoreComponent
@@ -485,7 +485,7 @@ try {
 
 Now, let's add functionality to navigate to the `SignupRoute` when users press the "Sign Up" button in the `LoginPage`:
 
-```dart filename="example/lib/pages/login_page.dart" {5}
+```dart filename="example/lib/presentation/pages/login_page.dart" {5}
 ...
 StyledButton.strong(
   labelText: 'Sign Up',
@@ -502,7 +502,7 @@ StyledButton.strong(
 
 In the `SignupPage`, let's direct users to the `HomeRoute` after successful account creation:
 
-```dart filename="example/lib/pages/signup_page.dart" {7}
+```dart filename="example/lib/presentation/pages/signup_page.dart" {7}
 ...
 try {
   final account = await context.authCoreComponent
@@ -522,7 +522,7 @@ try {
 
 To protect the `HomePage` from unauthorized access, we'll add a redirect that checks the user's authentication status:
 
-```dart filename="example/lib/pages/home_page.dart" {3, 7, 9-15}
+```dart filename="example/lib/presentation/pages/home_page.dart" {3, 7, 9-15}
 import 'package:flutter/material.dart';
 import 'package:flood/flood.dart';
 import 'package:template/presentation/pages/login_page.dart';
@@ -549,7 +549,7 @@ This redirect checks if a user is logged in and redirects to the `LoginRoute` if
 
 Let's display the logged-in user's ID on the `HomePage`:
 
-```dart filename="example/lib/pages/home_page.dart" {4,9}
+```dart filename="example/lib/presentation/pages/home_page.dart" {4,9}
 ...
 @override
 Widget onBuild(BuildContext context, HomeRoute route) {
@@ -574,9 +574,9 @@ With these changes, you've implemented secure navigation and basic authenticatio
 
 Now, let's add a logout option to our Home Page. We'll use an `ActionItem` to create a menu option for logging out.
 
-Update your `HomePage` in `example/lib/pages/home_page.dart`:
+Update your `HomePage` in `example/lib/presentation/pages/home_page.dart`:
 
-```dart filename="example/lib/pages/home_page.dart" {6-16}
+```dart filename="example/lib/presentation/pages/home_page.dart" {6-16}
 @override
 Widget onBuild(BuildContext context, HomeRoute route) {
   final loggedInUserId = useLoggedInUserIdOrNull();
@@ -620,9 +620,9 @@ To complete our authentication workflow, let's implement a Forgot Password featu
 
 ### Creating the ForgotPasswordRoute and ForgotPasswordPage
 
-Create a new file `example/lib/pages/forgot_password_page.dart` with the following content:
+Create a new file `example/lib/presentation/pages/forgot_password_page.dart` with the following content:
 
-```dart filename="example/lib/pages/forgot_password_page.dart"
+```dart filename="example/lib/presentation/pages/forgot_password_page.dart"
 import 'package:flood/flood.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -709,9 +709,9 @@ Map<Route, AppPage> get pages => {
 
 ### Navigation to Forgot Password Page
 
-Now, let's add a link to the Forgot Password page from our Login page. Update your `LoginPage` in `example/lib/pages/login_page.dart`:
+Now, let's add a link to the Forgot Password page from our Login page. Update your `LoginPage` in `example/lib/presentation/pages/login_page.dart`:
 
-```dart filename="example/lib/pages/login_page.dart" {8-14}
+```dart filename="example/lib/presentation/pages/login_page.dart" {8-14}
 ...
 StyledObjectPortBuilder(port: loginPort),
 StyledList.row.centered.withScrollbar(

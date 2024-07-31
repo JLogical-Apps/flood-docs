@@ -1,9 +1,9 @@
 {
-  "references": "References",
-  "repository-security": "Repository Security",
-  "asset-security": "Asset Security",
-  "customizing-ports": "Customizing Ports",
-  "value-object-polymorphism": "ValueObject Polymorphism",
-  "embedded-value-object-customization": "Embedded ValueObject Customization",
-  "offline-first-apps": "Offline-First Apps"
+  "references": {"type": "page", "display": "hidden"},
+  "repository-security": {"type": "page", "display": "hidden"},
+  "asset-security": {"type": "page", "display": "hidden"},
+  "customizing-ports": {"type": "page", "display": "hidden"},
+  "value-object-polymorphism": {"type": "page", "display": "hidden"},
+  "embedded-value-object-customization": {"type": "page", "display": "hidden"},
+  "offline-first-apps": {"type": "page", "display": "hidden"}
 }

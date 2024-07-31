@@ -1,1 +1,122 @@
 # Releasing Your App
+
+Releasing an app involves several steps, from setting the version number to deploying on various platforms. The Flood framework simplifies this process with its [Release automation](/automate/release), allowing you to efficiently manage your app releases across different environments and platforms.
+
+## Before You Begin
+
+This guide doesn't require knowledge from previous guides. However, if you're new to Flood, you might want to start with the [Install & Run Your First App](/install-and-run-your-first-app) guide to set up your project.
+
+## Understanding Release Concepts
+
+Before we dive into the release process, let's familiarize ourselves with some key concepts:
+
+1. **Release Platform**: Refers to the target platform for your app, such as Android, iOS, or web.
+
+2. **Deploy Target**: Specifies where your built app will be deployed, such as TestFlight, App Store, Google Play, or Firebase hosting.
+
+3. **Release Environment**: Defines the deployment configuration for different stages of your app's lifecycle (e.g., alpha, beta, production). Each environment can have different deploy targets for each platform.
+
+4. **Pipeline**: Describes the sequence of steps to be executed during the release process. The default pipeline (`Pipeline.defaultDeploy`) includes version updating, release notes collection, testing, building, signing, and deployment.
+
+## Setting Up Release Configuration
+
+To start using the Release automation, you need to configure your release pipelines. This is done in the `tool/automate.dart` file of your core project.
+
+1. Open `example_core/tool/automate.dart` and locate the `ReleaseAutomateComponent`.
+
+2. Modify the `pipelines` property to define your release environments and their corresponding deploy targets:
+
+```dart filename="example_core/tool/automate.dart"
+...
+await automatePondContext.register(ReleaseAutomateComponent(
+  pipelines: {
+    ReleaseEnvironmentType.beta: Pipeline.defaultDeploy({
+      ReleasePlatform.android: DeployTarget.googlePlay(GooglePlayTrack.internal, isDraft: true),
+      ReleasePlatform.ios: DeployTarget.testflight,
+      ReleasePlatform.web: DeployTarget.firebase(channel: 'beta'),
+    }),
+    ReleaseEnvironmentType.production: Pipeline.defaultDeploy({
+      ReleasePlatform.android: DeployTarget.googlePlay(GooglePlayTrack.beta),
+      ReleasePlatform.ios: DeployTarget.testflight,
+      ReleasePlatform.web: DeployTarget.firebase(),
+    }),
+  },
+  appStoreDeployTargetByPlatform: {
+    ReleasePlatform.android: DeployTarget.googlePlay(GooglePlayTrack.beta),
+    ReleasePlatform.ios: DeployTarget.appStore,
+  },
+));
+...
+```
+
+This configuration sets up two release environments: `beta` and `production`. For each environment, it specifies the deploy targets for Android, iOS, and web platforms.
+
+-   In the `beta` environment:
+
+    -   Android builds are deployed to Google Play's internal track as draft releases.
+    -   iOS builds are sent to TestFlight.
+    -   Web builds are deployed to Firebase hosting under a 'beta' channel.
+
+-   In the `production` environment:
+    -   Android builds go to Google Play's beta track.
+    -   iOS builds are sent to TestFlight.
+    -   Web builds are deployed to Firebase hosting's main channel.
+
+The `appStoreDeployTargetByPlatform` is used for deploying app store screenshots, which we won't cover in this guide.
+
+## Running the Release Process
+
+To initiate the release process, use the `release` command in your terminal:
+
+```bash
+dart tool/automate.dart release beta
+```
+
+This command will run the `beta` pipeline as defined in your configuration.
+
+### Specifying Platforms
+
+If you want to release for specific platforms only, use the `only` parameter:
+
+```bash
+dart tool/automate.dart release beta only:ios
+```
+
+This will run the pipeline only for the iOS platform.
+
+### Different Environments
+
+To use different pipelines, simply change the environment name in the command:
+
+```bash
+dart tool/automate.dart release production
+```
+
+This will run the `production` pipeline instead of the `beta` pipeline.
+
+## First-Time Setup
+
+The first time you run the release command, you'll be guided through a setup process to provide necessary API keys and credentials. This information is crucial for the automation to interact with various services on your behalf.
+
+-   Non-sensitive information is stored in `example_core/tool/state.yaml`.
+-   Sensitive data like API keys and secrets are stored in `example_core/tool/state.hidden.yaml`, which is gitignored by default.
+
+If you need to update or correct any of this information later, you can either edit these files directly or delete them to go through the guided setup process again.
+
+## The Release Process
+
+After the initial setup, subsequent runs of the release command will be much quicker. The automation will:
+
+1. Prompt you for basic information (e.g., version number, release notes).
+2. Update version numbers in necessary files.
+3. Run tests to ensure app stability.
+4. Build and sign the app for each specified platform.
+5. Deploy the built apps to the configured deploy targets.
+
+This automated process significantly reduces the time and effort required for releasing your app across multiple platforms and environments.
+
+## Next Steps
+
+Congratulations! You've now learned how to set up and use Flood's Release automation to streamline your app deployment process. This powerful tool allows you to manage complex release workflows with ease, ensuring consistency and efficiency in your release pipeline.
+
+Now that you've completed this guide, you're ready to explore more advanced topics in Flood. While advanced guides are still in development, you can stay updated on new content by subscribing to the newsletter on the [Flood home page](https://www.flooddev.com/#newsletter).

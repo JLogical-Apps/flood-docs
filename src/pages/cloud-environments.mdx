@@ -1,0 +1,147 @@
+import { Callout } from 'nextra/components';
+
+## Before You Begin
+
+This guide builds upon the concepts and implementations from previous guides, particularly the [Navigation & Route Security](/navigation-and-route-security) guide. If you haven't completed the previous guides, you can start with the repository that ended off at the last guide by cloning https://github.com/JLogical-Apps/flood-template/tree/routing.
+
+## Reminder of Environments
+
+Throughout our development process, we've been primarily using the `testing` [environment](/environment). However, Flood provides several other environments to facilitate different stages of development and deployment:
+
+1. `testing`: Simulates all services in-memory, resetting everything on app restart.
+2. `device`: Simulates services on the device's file system, persisting data between app restarts.
+3. `qa`: Prefers to use predefined emulators for services like Firebase.
+4. `production`: Uses online resources such as Firebase or Appwrite.
+
+In this guide, we'll focus on setting up the `production` environment to link our app to a Firebase project. This will allow us to start testing our data in the cloud and move towards a more realistic production scenario.
+
+## Integrating with Firebase
+
+For this guide, we'll be integrating our app with [Firebase](https://firebase.google.com). Firebase offers a suite of tools that work well with Flutter apps, including Authentication, Firestore (for database), and Storage. If you're not familiar with these Firebase services, it's recommended to review the [Firebase documentation](https://firebase.google.com/docs) before proceeding.
+
+For more details on how Flood integrates with Firebase, you can refer to the [Firebase integration guide](/firebase).
+
+## Firebase Project Creation
+
+Let's start by creating a new Firebase project:
+
+1. Go to the [Firebase Console](https://console.firebase.google.com/).
+2. Click on "Add project" and follow the prompts to create a new project.
+3. Once your project is created, we need to set up the services we'll be using:
+
+a. **Enable Email/Password authentication:**
+
+-   In the Firebase Console, go to "Authentication" > "Sign-in method".
+-   Enable the Email/Password sign-in method.
+
+b. **Create Firestore database:**
+
+-   Go to "Firestore Database" in the Firebase Console.
+-   Click "Create database".
+-   Start in test mode for now (we'll add security rules later).
+
+c. **Set up Firebase Storage:**
+
+-   Go to "Storage" in the Firebase Console.
+-   Click "Get started".
+-   Start in test mode (we'll add security rules later).
+
+## Link Project to Flood
+
+Now that we have our Firebase project set up, let's link it to our Flood app:
+
+1.  From your app project directory (for example, `cd example`), install and use the [flutterfire](https://pub.dev/packages/flutterfire_cli) CLI to configure your project:
+
+        ```bash
+        dart pub global activate flutterfire_cli
+        flutterfire configure
+        ```
+
+<Callout type="info">
+
+If you encounter errors with the latest version of `flutterfire`, you can use version 0.2.7 instead:
+
+```bash
+dart pub global activate flutterfire_cli 0.2.7
+flutterfire configure
+```
+
+</Callout>
+
+2.  Create a `firebase` directory in your core project (for example, `example_core`).
+
+3.  From within the `firebase` directory, run:
+
+    ```bash
+    firebase init
+    ```
+
+    This will initialize and link to the Firebase project you created. When prompted, select Firestore, Functions, Storage, and Emulators for initialization.
+
+4.  Modify your `main.dart` file to include `FirebaseCoreComponent` in `initialCoreComponents`:
+
+    ```dart filename="example/lib/main.dart" {3-5}
+    ...
+    final corePondContext = await getCorePondContext(
+      initialCoreComponents: (context) => [
+        FirebaseCoreComponent(app: DefaultFirebaseOptions.currentPlatform),
+      ],
+      ...
+    );
+    ...
+    ```
+
+    The `FirebaseCoreComponent` will run [Firebase.initializeApp](https://firebase.flutter.dev/docs/overview/#initialization) before the rest of the [CorePondComponent](/pond/core)s register, which is necessary for proper Firebase integration.
+
+5.  Integrate Auth and Repository cloud implementations:
+
+    When using `adapting` `AuthService` and `Repository`s in Flood, the framework will use the `cloud` variants when in a cloud environment like `production`. However, these `cloud` variants don't actually integrate with a specific cloud service by default. Instead, they look for corresponding `AuthServiceImplementation` and `RepositoryImplementation` to determine how to interact with the cloud service.
+
+    By passing in `FirebaseCloudRepositoryImplementation` and `FirebaseAuthServiceImplementation`, we're explicitly telling Flood to use Firebase as the backend for our cloud repositories and authentication services.
+
+    Here's how to set it up:
+
+    ```dart filename="example_core/lib/pond.dart" {6-11}
+    ...
+    final corePondContext = await getCorePondContext(
+      initialCoreComponents: (context) => [
+        FirebaseCoreComponent(app: DefaultFirebaseOptions.currentPlatform),
+      ],
+      repositoryImplementations: (context) => [
+        FirebaseCloudRepositoryImplementation(),
+      ],
+      authServiceImplementations: (context) => [
+        FirebaseAuthServiceImplementation(),
+      ],
+      ...
+    );
+    ...
+    ```
+
+    By setting up these implementations, you're effectively creating a bridge between your Flood app's abstract data layer and the concrete Firebase services. This allows your app to work with Firebase seamlessly when in the `production` environment, while still being able to use local implementations in other environments like `testing` or `device`.
+
+## Running in Production
+
+Now that we've set up our Firebase integration, let's run our app in the production environment:
+
+1. Change your environment to `production` by updating your `example/assets/config.overrides.yaml` file:
+
+    ```yaml filename="example/assets/config.overrides.yaml"
+    environment: production
+    ```
+
+2. Re-run your app.
+
+3. Try signing up and creating todos. You should notice that everything is now linking to your Firebase project!
+
+<Callout type="info">
+    You may need to create indexes for some queries. If you see errors in your
+    debug console related to missing indexes, follow the provided links to
+    create the necessary indexes in your Firebase project.
+</Callout>
+
+## Next Steps
+
+Congratulations! You've successfully set up your Flood app to work with Firebase in a production environment. However, our current setup leaves our Firebase project exposed, allowing anyone to access all the data. To address this security concern, we need to implement proper security rules to protect our users' data.
+
+In the next guide, [Data Security](/data-security), we'll explore how to secure our repositories and ensure that users can only access their own data. This is a crucial step in preparing your app for real-world use.

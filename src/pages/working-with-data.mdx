@@ -255,9 +255,9 @@ Now that we have our User and Todo features set up, let's look at how to update 
 
 ### Creating a User on Signup
 
-First, we'll create a `User` whenever a new user signs up. We'll update the signup port to include a name field and create the user entity with the same ID as the account ID. Modify your `SignupPage` in `example/lib/pages/signup_page.dart`:
+First, we'll create a `User` whenever a new user signs up. We'll update the signup port to include a name field and create the user entity with the same ID as the account ID. Modify your `SignupPage` in `example/lib/presentation/pages/signup_page.dart`:
 
-```dart filename="example/lib/pages/signup_page.dart" {10,38-42}
+```dart filename="example/lib/presentation/pages/signup_page.dart" {10,38-42}
 import 'package:example_core/features/user/user.dart';
 import 'package:example_core/features/user/user_entity.dart';
 
@@ -348,9 +348,9 @@ These validation steps help ensure that the user signup process is working corre
 
 ### Adding a "Create Todo" Button
 
-Let's add a "Create Todo" button to the home page. Modify your `HomePage` in `example/lib/pages/home_page.dart`:
+Let's add a "Create Todo" button to the home page. Modify your `HomePage` in `example/lib/presentation/pages/home_page.dart`:
 
-```dart filename="example/lib/pages/home_page.dart" {3,5-22}
+```dart filename="example/lib/presentation/pages/home_page.dart" {3,5-22}
 ...
 return StyledPage(
   titleText: 'Todos',
@@ -404,7 +404,7 @@ Now that we can create Todos, let's display them on the home page using the `use
 
 Update your `HomePage` as follows:
 
-```dart filename="example/lib/pages/home_page.dart" {6-10,20-42}
+```dart filename="example/lib/presentation/pages/home_page.dart" {6-10,20-42}
 ...
 class HomePage with IsAppPageWrapper<HomeRoute> {
   @override

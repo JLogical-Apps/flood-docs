@@ -10,10 +10,15 @@
   "user-authentication": "User Authentication",
   "working-with-data": "Working with Data",
   "navigation-and-route-security": "Navigation & Route Security",
-  "using-assets": "Assets",
+  "cloud-environments": "Cloud Environments",
   "data-security": "Data Security",
+  "using-assets": "Using Assets",
   "releasing-your-app": "Releasing Your App",
-  "advanced-guides": "Advanced Guides",
+  "advanced-guides": {
+    "type": "page",
+    "display": "hidden"
+  },
+  "advanced-guides-coming-soon": "Advanced Guides",
   "-modules": {
     "type": "separator",
     "title": "Modules"
@@ -58,8 +63,8 @@
     "newWindow": true
   },
   "access-flood": {
-    "title": "Access Flood",
+    "title": "Get Started with Flood",
     "type": "page",
-    "href": "/get-started#get-access-to-flood"
+    "href": "/get-started"
   }
 }

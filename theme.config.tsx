@@ -5,10 +5,19 @@ import jlogical from './public/jlogical.png';
 import ComingSoonChip from '@/components/coming-soon-chip';
 import NewChip from '@/components/new-chip';
 
-const comingSoonPages = ['I18n', 'Backend', 'Appwrite', 'Supabase'];
+const comingSoonPages = [
+    'I18n',
+    'Backend',
+    'Appwrite',
+    'Supabase',
+    'Advanced Guides',
+];
 const newPages = ['Guides', 'Asset'];
 
 const config: DocsThemeConfig = {
+    editLink: {
+        text: 'Edit this page on Github',
+    },
     head: (
         <>
             <meta
@@ -30,7 +39,8 @@ const config: DocsThemeConfig = {
             <b>Flood</b>
         </>
     ),
-    docsRepositoryBase: 'https://github.com/JLogical-Apps/flood-docs',
+    docsRepositoryBase:
+        'https://github.com/JLogical-Apps/flood-docs/tree/main/',
     sidebar: {
         defaultMenuCollapseLevel: 1,
         titleComponent: (props) => {
