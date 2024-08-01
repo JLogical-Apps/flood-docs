@@ -1,7 +1,7 @@
 {
-  "index": "Introduction",
-  "get-started": "Get Started",
-  "core-concepts": "Core Concepts",
+  "index": {
+    "display": "hidden"
+  },
   "-guides": {
     "type": "separator",
     "title": "Guides"
@@ -56,15 +56,16 @@
     "type": "separator",
     "title": "Resources"
   },
+  "core-concepts": "Core Concepts",
   "release-notes": "Release Notes",
   "flood-github-repository": {
-    "title": "Flood Github Repository",
+    "title": "Flood Github Repository →",
     "href": "https://github.com/JLogical-Apps/flood",
     "newWindow": true
   },
-  "access-flood": {
-    "title": "Get Started with Flood",
+  "get-started": {
+    "title": "Get Started",
     "type": "page",
-    "href": "/get-started"
+    "href": "/install-and-run-your-first-app"
   }
 }
