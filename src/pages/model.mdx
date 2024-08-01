@@ -2,7 +2,7 @@
 
 When building a page in a Flutter application, you often need to load data from an API, show a loading indicator while the data is being fetched, display an error message if the request fails, and finally render the data once it's available. Additionally, if the data changes, you want your UI to reactively update to reflect those changes.
 
-Handling all these scenarios manually can be tedious and error-prone. The `Model` class in the Flood framework abstracts this process, making it extremely easy to work with asynchronous, changing, and reactive data.
+Handling all these scenarios manually can be tedious and error-prone. The `Model` class in the Flood toolkit abstracts this process, making it extremely easy to work with asynchronous, changing, and reactive data.
 
 ## Model
 
@@ -95,7 +95,7 @@ The `ModelBuilder` will run the `Builder` with the loaded value of `settingsMode
 
 ## Hooks
 
-The Flood framework provides a few hooks that can be helpful when using [flutter_hooks](https://pub.dev/packages/flutter_hooks):
+The Flood toolkit provides a few hooks that can be helpful when using [flutter_hooks](https://pub.dev/packages/flutter_hooks):
 
 -   `useModel(Model model)`: Listens to the state of the `Model` and returns its current state.
 -   `useModels(List<Model> models)`: Listens to the state of all the `Model`s and returns a list of their current states.

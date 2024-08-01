@@ -95,7 +95,7 @@ flutterfire configure
 
 5.  Integrate Auth and Repository cloud implementations:
 
-    When using `adapting` `AuthService` and `Repository`s in Flood, the framework will use the `cloud` variants when in a cloud environment like `production`. However, these `cloud` variants don't actually integrate with a specific cloud service by default. Instead, they look for corresponding `AuthServiceImplementation` and `RepositoryImplementation` to determine how to interact with the cloud service.
+    When using `adapting` `AuthService` and `Repository`s in Flood, Flood will use the `cloud` variants when in a cloud environment like `production`. However, these `cloud` variants don't actually integrate with a specific cloud service by default. Instead, they look for corresponding `AuthServiceImplementation` and `RepositoryImplementation` to determine how to interact with the cloud service.
 
     By passing in `FirebaseCloudRepositoryImplementation` and `FirebaseAuthServiceImplementation`, we're explicitly telling Flood to use Firebase as the backend for our cloud repositories and authentication services.
 

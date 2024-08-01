@@ -80,7 +80,7 @@ const config: DocsThemeConfig = {
         return {
             titleTemplate: '%s - Flood',
             description:
-                'Flood is a comprehensive Flutter and Dart framework that streamlines app development with a modular architecture, extensive features, and intuitive APIs. The documentation site provides guides, tutorials, and API references to help developers quickly build high-quality, visually appealing, and performant applications.',
+                'Flood is a comprehensive Flutter and Dart toolkit that streamlines app development with a modular architecture, extensive features, and intuitive APIs. The documentation site provides guides, tutorials, and API references to help developers quickly build high-quality, visually appealing, and performant applications.',
             openGraph: {
                 images: [
                     {

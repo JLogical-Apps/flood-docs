@@ -1,6 +1,6 @@
 # Type
 
-In many programming languages, you can simply provide a `Type` and have the language generate a new instance of that `Type` using reflection. However, Dart does not include the ability to instantiate types during runtime to keep the generated programs lean and efficient. The `Type` module in the Flood framework addresses this limitation by introducing `RuntimeType`s, which allow you to define and instantiate types dynamically.
+In many programming languages, you can simply provide a `Type` and have the language generate a new instance of that `Type` using reflection. However, Dart does not include the ability to instantiate types during runtime to keep the generated programs lean and efficient. The `Type` module in the Flood toolkit addresses this limitation by introducing `RuntimeType`s, which allow you to define and instantiate types dynamically.
 
 ## Context
 
@@ -61,7 +61,7 @@ typeContext.construct(MyConcreteClass);
 
 Note that attempting to create an instance of an abstract `RuntimeType` will throw an error.
 
-By leveraging the `Type` module in the Flood framework, you can effectively manage and instantiate runtime types in your Dart and Flutter applications. This enables dynamic type creation while maintaining the efficiency and performance benefits of Dart's design philosophy.
+By leveraging the `Type` module in the Flood toolkit, you can effectively manage and instantiate runtime types in your Dart and Flutter applications. This enables dynamic type creation while maintaining the efficiency and performance benefits of Dart's design philosophy.
 
 ## Use with Pond
 
