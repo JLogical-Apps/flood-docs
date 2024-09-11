@@ -131,9 +131,9 @@ The Asset Module provides robust security features:
 
 -   You can define custom security rules, such as:
 
--   Allowing only authenticated users to access assets.
--   Restricting access based on user roles (e.g., admin access).
--   Limiting access to assets based on user IDs or other entity properties.
+    -   Allowing only authenticated users to access assets.
+    -   Restricting access based on user roles (e.g., admin access).
+    -   Limiting access to assets based on user IDs or other entity properties.
 
 -   You can inherit security rules from Drop [Repositories](/drop/repositories-and-security#repositories), making it easy to align asset access with entity access rules.
 
@@ -157,3 +157,37 @@ This security configuration:
 -   Allows any authenticated user to read the asset.
 -   Allows creation and updating only if the logged-in user ID matches the entity ID.
 -   Allows deletion only for admin users whose ID matches the entity ID.
+
+## Asset Compression
+
+The Asset Module supports automatic image and video compression for AssetProviders. This feature helps reduce storage usage and bandwidth consumption, especially useful for cloud storage solutions like Firebase Storage.
+
+### Enabling Compression
+
+To enable compression for an AssetProvider, simply add the `.withCompression()` modifier:
+
+```dart filename="example_core/lib/features/user/user.dart" {10}
+class UserProfilePictureAssetProvider with IsAssetProviderWrapper {
+  final AssetCoreComponent context;
+
+  UserProfilePictureAssetProvider(this.context);
+
+  @override
+  late final AssetProvider assetProvider = AssetProvider.static
+      .adapting(context, (context) => 'users/${context.entityId}/profilePicture')
+      .fromRepository<UserEntity>(context)
+      .withCompression(); // Enable compression
+}
+```
+
+In order to use [flutter_image_compress](https://pub.dev/packages/flutter_image_compress) for compression, ensure `FlutterCompressionAssetProviderImplementation` is added to the `FloodAppComponent`:
+
+```dart filename="example/lib/main.dart" {5}
+FloodAppComponent(
+  ...,
+  assetProviderImplementations: (corePondContext) => [
+    ...,
+    FlutterCompressionAssetProviderImplementation(),
+  ],
+),
+```

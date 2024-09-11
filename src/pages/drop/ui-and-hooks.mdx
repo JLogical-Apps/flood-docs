@@ -55,7 +55,7 @@ Check out Port's [Auto-generated UI](/port#auto-generated-ui) section to learn a
 
 ### Reference Fields
 
-Reference fields in ValueObjects provide enhanced functionality when generating Ports. When editing Ports of ValueObjects containing reference fields, a dropdown field will appear, allowing users to select from available entities.
+Reference fields in ValueObjects provide enhanced functionality when generating Ports. When editing Ports of ValueObjects containing reference fields, a dropdown field will appear, allowing users to select from available entities. In addition, a search icon will appear next to the field. Clicking this icon opens a dialog that allows users to search for and select entities.
 
 Here's an example of a reference field with advanced configuration:
 
@@ -72,15 +72,18 @@ late final trayProperty = reference<TrayEntity>(
         return trayEntities.where((trayEntity) => trayEntity.value.public.value).toList();
       }
       return trayEntities;
-    }).withDisplayName('Tray');
+    },
+    stringSearchMapper: (trayEntity) => [trayEntity.value.nameProperty.value],
+).withDisplayName('Tray');
 ```
 
 In this example:
 
 -   `searchQueryGetter`: Overrides the default Query used to fetch available entities. It allows you to customize the search criteria, such as filtering by the logged-in user and ordering the results.
 -   `searchResultsFilter`: Provides an asynchronous predicate to further filter the query results. In this case, it checks if the user is locked and, if so, only displays public trays.
+-   `stringSearchMapper`: Overrides the fields that are used when searching for entities. By default, all String fields are used for filtering.
 
-When this ValueObject is used to generate a Port, the UI will display a dropdown field for the 'tray' property. The dropdown will be populated with TrayEntity options based on the custom query and filter logic defined in the reference field.
+When this ValueObject is used to generate a Port, the UI will display a dropdown field and search icon for the 'tray' property. The dropdown will be populated with TrayEntity options based on the custom query and filter logic defined in the reference field. Clicking the search icon opens a search dialog where users can search for and filter TrayEntity options based on their name.
 
 This feature allows for more dynamic and context-aware selection of referenced entities in your application's forms and UI components.
 

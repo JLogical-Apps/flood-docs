@@ -26,7 +26,7 @@ class User extends ValueObject {
 `ValueObject`s can have different behaviors and modifiers to customize their properties:
 
 -   `field<T>()`: A simple behavior that stores a value of type `T`.
--   `reference<EntityType>()`: A field that stores a String but indicates it references an `EntityType`. View [Reference Fields](#reference-fields) for more info on how they are used within auto-generated UI.
+-   `reference<EntityType>()`: A field that stores a String but indicates it references an `EntityType`.
 -   `computed()`: Computes a value to store in the repository.
 
 Modifiers for behaviors include:
@@ -37,12 +37,13 @@ Modifiers for behaviors include:
 -   `.withValidator()`: Adds a `Validator` to the field.
 -   `.isEmail()`: Indicates the field must be an email.
 -   `.time()`: Parses Strings from the repository into `Timestamp` to be used in the code.
--   `.asset()`: Converts a String id into an asset used by the [Asset Module](/asset). Reference [this](asset#using-assets-in-valueobjects) for more info on how to configure the `.asset` modifier. This modifier not only manages the reference to the asset but also handles the lifecycle of the asset itself.
+-   `.asset()`: Converts a String id into an asset used by the [Asset Module](/asset). Reference [this](/asset#using-assets-in-valueobjects) for more info on how to configure the `.asset` modifier. This modifier not only manages the reference to the asset but also handles the lifecycle of the asset itself.
 -   `.embedded()`: Required for `field<ValueObjectType>()` so that it can extract data to the `ValueObjectType`.
 -   `.list()`: A list of the field type. For example, `field<String>().list()` is a `List<String>`.
 -   `.mapTo<ValueType>()`: A map where the field type is the key and `ValueType` is the value type. For example, `field<String>().mapTo<int>()` is a `Map<String, int>`.
 -   `.withMapper(mapper)`: Maps the raw database value into one more useful for the application. For example, mapping an enum index to the enum value itself.
--   `.withOptions(options)`: Limits the available options for the property. This will run as a validation when the ValueObject is instantiated and before it is serialized, and will then render the field as a dropdown in the generated Port instead of a text-field.
+-   `.withOptions(options)`: Limits the available options for the property. This will run as a validation when the ValueObject is instantiated and before it is serialized, and will then render the field as a dropdown in the generated [Port](/port) instead of a text-field.
+-   `.withSuggestions(suggestionsGetter)`: Provides suggestions for the auto-generated PortField.
 
 ## Entities
 

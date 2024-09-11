@@ -1,0 +1,102 @@
+# v4.2
+
+<iframe
+    width="450"
+    height="253"
+    src="https://www.youtube.com/embed/cunWU4t0DKU?si=SSXKDp7Mm8yMjLVG"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+></iframe>
+
+These updates bring significant improvements to app styling, user input, and data management, enhancing both developer productivity and application performance.
+
+## Major Changes
+
+### Dynamic Styling
+
+-   Added ability to dynamically style your app at runtime by setting `context.styleAppComponent.style` to a [Style](/style).
+-   Introduced `styleLoader` in `FloodAppComponent` for asynchronous style loading. This can be used to asynchronously load light or dark theme based on the currently logged-in user's preferences.
+
+### Text Input Suggestions
+
+-   Added dynamic text suggestions which enhances the user input experience with clickable suggestions. Suggestions can be accessed by one of the following: [StyledTextField](/style/input#styledtextfield), [PortField](/port#fields), or [ValueObject fields](/drop/value-objects-and-entities#valueobjects).
+
+    ```dart
+    // Highly customizable from within the UI
+    StyledTextField(
+      suggestionsGetter: (currentText) async {
+          /* Fetch suggestions here */
+      },
+    )
+
+    // from within a Port
+    PortField.string().withSuggestions((value) async {/* Fetch suggestions here */})
+
+    // from within a ValueObject
+    static const stateField = 'state';
+    late final stateProperty = field<String>(name: stateField)
+         .withDisplayName('State')
+         .withSuggestions((context, value) async {/* Fetch suggestions here */});
+    ```
+
+-   Implemented customizable suggestion behaviors, including debounce duration and widget builders.
+
+### Improved Reference Fields
+
+-   Enhanced reference fields in [ValueObject Ports](/drop/ui-and-hooks#reference-fields) by adding a search dialog for easier entity selection.
+
+### Asset Compression
+
+-   Introduced automatic [image and video compression for AssetProviders](/asset#asset-compression), which optimizes storage usage and bandwidth consumption for uploaded assets by simply adding `.withCompression()` to an AssetProvider.
+-   To use `.withCompression()` in your Flood app, add the following configuration:
+
+```dart filename="example/lib/main.dart" {5}
+FloodAppComponent(
+  ...,
+  assetProviderImplementations: (corePondContext) => [
+    ...,
+    FlutterCompressionAssetProviderImplementation(),
+  ],
+),
+```
+
+### Firebase Integration Enhancements
+
+-   Added [FirebaseDropAutomateComponent](/automate/firebase-drop) with new `drop_functions` command, which automatically generates TypeScript definitions for [Repositories](/drop/repositories-and-security#repositories) and [ValueObjects](/drop/value-objects-and-entities#valueobjects). This improves type-safety and productivity when working with Firebase Functions.
+-   To use, simply add the following configuration to the [AutomatePondContext](/pond/automate.mdx):
+
+```dart filename="example_core/tool/automate.dart"
+await automatePondContext.register(FirebaseDropAutomateComponent());
+```
+
+## Minor Changes
+
+-   Introduced `Query.getSingleton` for efficient handling of unique entities.
+-   Resolved issues related to Flutter web compatibility.
+-   Fixed bugs in the offline-sync module to improve reliability.
+
+## How to Upgrade
+
+To upgrade your project to Flood v4.2, follow these steps:
+
+1. Update the `flood`, `flood_core`, and `flood_cli` dependencies in your `pubspec.yaml` files to `v4.2`:
+
+    ```yaml
+    dependencies:
+        flood: # flood_core, and flood_cli
+            git:
+                url: # Do not change
+                ref: v4.2 # <-- Change this from v4.1 to v4.2
+                path: # Do not change
+    ```
+
+2. Run the following command to update dependencies and rebuild your project:
+
+    ```bash
+    melos bs
+    ```
+
+3. There aren't any breaking changes! Refer to [this commit](https://github.com/JLogical-Apps/flood-example/commit/61393fbef158472d2908091686aecfcc1e78354c) as a reference for how the example project upgraded from v4.1 to v4.2.

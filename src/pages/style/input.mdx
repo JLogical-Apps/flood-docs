@@ -13,6 +13,15 @@ StyledTextField(
   leadingIcon: Icons.text_fields,
   keyboard: TextInputType.emailAddress,
   onChanged: (newText) {},
+
+  // The properties below define "suggestions", which appear underneath the text-field as the user types.
+  suggestionsGetter: (text) => mySuggestionService.suggest(text), // Asynchronously loads suggestions based on the current text.
+  suggestionsDebounceDuration: Duration.zero, // By default 400ms
+  suggestionBuilder: (suggestion) => StyledText.sm.display.bold(state), // How to render the suggestions. By default, just a StyledText.body.
+  onSuggestionPressed: (suggestion, controller) { // Action when suggestion is pressed. By default, just sets the text of the `controller` to the suggestion.
+    controller.text = suggestion;
+    print('Suggestion selected: $suggestion');
+  },
 ),
 ```
 

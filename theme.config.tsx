@@ -12,7 +12,7 @@ const comingSoonPages = [
     'Supabase',
     'Advanced Guides',
 ];
-const newPages = ['Guides', 'Asset'];
+const newPages = ['Firebase Drop'];
 
 const config: DocsThemeConfig = {
     editLink: {

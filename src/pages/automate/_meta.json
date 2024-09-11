@@ -1,5 +1,6 @@
 {
   "release": "Release",
   "ops": "Ops",
-  "native-setup": "Native Setup"
+  "native-setup": "Native Setup",
+  "firebase-drop": "Firebase Drop"
 }

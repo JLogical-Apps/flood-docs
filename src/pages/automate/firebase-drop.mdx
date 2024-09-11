@@ -1,0 +1,93 @@
+# Firebase Drop Automate Component
+
+The `FirebaseDropAutomateComponent` is a powerful addition to Flood's Automate module, designed to enhance the integration between your [Drop](/drop) models and [Firebase Functions](https://firebase.google.com/docs/functions). This component generates TypeScript type definitions for your Drop ValueObjects and Repositories, making it easier to maintain type safety and consistency across your Flutter app and Firebase backend.
+
+## Overview
+
+When you use the `FirebaseDropAutomateComponent`, it adds a new automate command called `drop_functions`. This command analyzes all your Drop ValueObjects and Repositories, then generates a `.ts` file in your Firebase functions folder. This file contains TypeScript type definitions that mirror your Dart models, ensuring that your Firebase Functions can work with the same data structures as your Flutter app.
+
+## Usage
+
+### Setting Up
+
+To use the `FirebaseDropAutomateComponent`, add it to your `AutomatePondContext` in your `automate.dart` file:
+
+```dart filename="example_core/tool/automate.dart"
+await automatePondContext.register(FirebaseDropAutomateComponent());
+```
+
+### Running the Command
+
+Once set up, you can generate the TypeScript definitions by running:
+
+```bash
+dart tool/automate.dart drop_functions
+```
+
+This command will analyze your Drop models and generate the corresponding TypeScript definitions.
+
+## Output
+
+The command generates a `.ts` file in your Firebase functions folder. Here's an example of what the output might look like:
+
+```typescript
+declare namespace UserRepository {
+    const path: 'user';
+}
+
+declare namespace TodoRepository {
+    const path: 'todo';
+}
+
+declare namespace TagsRepository {
+    const path: 'tags';
+}
+
+declare namespace PublicRepository {
+    const path: 'public';
+}
+
+declare namespace User {
+    const nameField: 'name';
+    const emailField: 'email';
+    const deviceTokenField: 'deviceToken';
+    const profilePictureField: 'profilePicture';
+    const creationTimeField: 'creationTime';
+}
+
+declare namespace UserToken {
+    const nameField: 'name';
+    const assetField: 'asset';
+}
+
+declare namespace Todo {
+    const nameField: 'name';
+    const descriptionField: 'description';
+    const completedField: 'completed';
+    const tagsField: 'tags';
+    const userField: 'user';
+    const assetsField: 'assets';
+    const tokensField: 'tokens';
+    const creationTimeField: 'creationTime';
+}
+
+declare namespace Tag {
+    const nameField: 'name';
+    const colorField: 'color';
+    const ownerField: 'owner';
+}
+
+declare namespace PublicSettings {
+    const minVersionField: 'minVersion';
+}
+```
+
+## Benefits
+
+1. **Type Safety**: The generated TypeScript definitions ensure that your Firebase Functions use the correct field names and types when working with data from your Flutter app.
+
+2. **Consistency**: As your Drop models evolve, you can easily keep your Firebase Functions in sync by re-running the `drop_functions` command.
+
+3. **Autocompletion**: In your Firebase Functions code, you'll get autocompletion for field names, reducing the chance of typos and speeding up development.
+
+4. **Documentation**: The generated file serves as a quick reference for the structure of your data models.

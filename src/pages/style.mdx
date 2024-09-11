@@ -112,6 +112,34 @@ final style = FlatStyle()
 
 Instead of creating `StyleComponent`s for every new component in your app, it's recommended to just create a Widget that composes multiple pre-built `StyleComponent`s together. `StyleComponent`s should only represent the building-blocks of a `Style`, and more complex widgets should just use the existing `StyleComponent`s.
 
+## Dynamic Styling
+
+The Style Module supports dynamic styling, allowing you to change your app's style at runtime. This feature enables you to implement themes like light/dark mode or custom styles such as high-contrast or color-blind modes.
+
+### Initial Style Setup
+
+When initializing your app, you can set an initial style and define a `styleLoader` for asynchronous style loading:
+
+```dart
+await appPondContext.register(FloodAppComponent(
+  style: initialStyle, // Style to use during the splash screen.
+  styleLoader: () async {
+    // Load style based on user preferences or other factors
+    return await loadUserPreferredStyle();
+  },
+));
+```
+
+### Changing Style at Runtime
+
+You can switch styles during runtime using the `StyleAppComponent`:
+
+```dart
+context.styleAppComponent.style = newStyle;
+```
+
+This allows you to implement features like a theme switcher or apply user-specific styles dynamically.
+
 ## Styleguide
 
 The Style Module includes a powerful tool called the `Styleguide` that allows you to preview and test the appearance of different components in your application. The `Styleguide` provides a visual reference for designers and developers, ensuring consistency and adherence to the defined style.
